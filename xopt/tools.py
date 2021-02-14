@@ -9,6 +9,7 @@ from datetime import date
 from hashlib import blake2b
 import yaml
 import json
+from glob import glob
 from copy import deepcopy
 import importlib
 import inspect
@@ -189,6 +190,15 @@ def encode1(d, labels):
 
 #--------------------------------
 # Paths
+
+
+def files_from_match(path, match='gen*json'):
+    """
+    
+    """
+    flist = glob(path+'/'+match)
+    return sorted(flist, key=os.path.getmtime)
+
     
 def full_path(path, ensure_exists=True):
     """
@@ -301,14 +311,32 @@ def write_attrs_nested(h5, name, data):
         
 #--------------------------------
 # data fingerprinting   
-class NumpyEncoder(json.JSONEncoder):
+class NpEncoder(json.JSONEncoder):
     """
+    See: https://stackoverflow.com/questions/50916422/python-typeerror-object-of-type-int64-is-not-json-serializable/50916741
+    """
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)     
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        elif isinstance(obj, np.bool_):
+            return bool(obj) 
+        else:
+            return super(NpEncoder, self).default(obj)
+
+class old_NumpyEncoder(json.JSONEncoder):
+    """
+    Old routine. Use NpEncoder. 
     See: https://stackoverflow.com/questions/26646362/numpy-array-is-not-json-serializable
     """
     def default(self, obj):
         if isinstance(obj, np.ndarray):
             return obj.tolist()
         return json.JSONEncoder.default(self, obj)
+    
 def fingerprint(keyed_data, digest_size=16):
     """
     Creates a cryptographic fingerprint from keyed data. 
@@ -318,10 +346,18 @@ def fingerprint(keyed_data, digest_size=16):
     h = blake2b(digest_size=16)
     for key in keyed_data:
         val = keyed_data[key]
-        s = json.dumps(val, sort_keys=True, cls=NumpyEncoder).encode()
+        s = json.dumps(val, sort_keys=True, cls=NpEncoder).encode()
         h.update(s)
     return h.hexdigest()          
 
+
+def native_type(value):
+    """
+    Converts a numpy type to a native python type.
+    See:
+    https://stackoverflow.com/questions/9452775/converting-numpy-dtypes-to-native-python-types/11389998
+    """
+    return getattr(value, 'tolist', lambda: value)()    
 
 
 #--------------------------------
