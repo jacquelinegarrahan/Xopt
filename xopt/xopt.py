@@ -1,6 +1,6 @@
 from .tools import full_path, expand_paths, load_config, save_config, fill_defaults, random_settings, get_function, isotime
 from .cnsga import cnsga
-from .sampler import random_sampler, sampler
+from .sampler import random_sampler #, sampler
 from .configure import configure_algorithm, configure_simulation, configure_vocs, VOCS_DEFAULTS
 from ._version import __version__
 import pprint
@@ -186,7 +186,7 @@ class Xopt:
         if alg in ['cnsga', 'cnsga2']:
             self.run_cnsga(executor=executor)
             
-        elif alg in ['sampler', 'random_sampler']:
+        elif alg in ['random_sampler']:
             self.population = self.run_f(executor=executor,
                               evaluate_f=self.evaluate,
                               output_path= self.config['xopt']['output_path'], **self.algorithm['options'])             
