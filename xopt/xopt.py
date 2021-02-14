@@ -1,6 +1,6 @@
 from .tools import full_path, expand_paths, load_config, save_config, fill_defaults, random_settings, get_function, isotime
 from .cnsga import cnsga
-from .sampler import random_sampler
+from .sampler import random_sampler, sampler
 from .configure import configure_algorithm, configure_simulation, configure_vocs, VOCS_DEFAULTS
 from ._version import __version__
 import pprint
@@ -127,7 +127,7 @@ class Xopt:
         options = alg['options']
         
         # Reserved keys
-        for k in ['vocs', 'evaluate_f', 'output_path', 'toolbox']:
+        for k in ['vocs', 'evaluate_f', 'output_path', 'toolbox', 'executor']:
             if k in options:
                 options.pop(k)
         
@@ -183,14 +183,13 @@ class Xopt:
 
         alg = self.algorithm['name'] 
 
-        if alg == 'cnsga':
+        if alg in ['cnsga', 'cnsga2']:
             self.run_cnsga(executor=executor)
             
-        elif alg == 'random_sampler':
+        elif alg in ['sampler', 'random_sampler']:
             self.population = self.run_f(executor=executor,
-                              vocs=self.vocs, 
                               evaluate_f=self.evaluate,
-                              output_path= self.config['xopt']['output_path'], **self.algorithm['options']) 
+                              output_path= self.config['xopt']['output_path'], **self.algorithm['options'])             
             
         else:
             raise Exception(f'Unknown algorithm {alg}')
@@ -230,17 +229,17 @@ class Xopt:
         """
         Makes random inputs and runs evaluate.
         
-        If check_vocs, will check that all keys in vocs constraints and objectives are in output.
+        If check_vocs, will check that all keys in vocs constraints and objectives are in outputs or inputs.
         """
         inputs = self.random_inputs()
         outputs = self.evaluate(inputs)
         if check_vocs:
             err_keys = []
             for k in self.vocs['objectives']:
-                if k not in outputs:
+                if k not in outputs and k not in inputs:
                     err_keys.append(k)
             for k in self.vocs['constraints']:
-                if k not in outputs:
+                if k not in outputs and k not in inputs:
                     err_keys.append(k)        
             assert len(err_keys)==0, f'Required keys not found in output: {err_keys}'      
            

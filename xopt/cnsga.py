@@ -190,9 +190,9 @@ def cnsga_evaluate(vec, evaluate_f=None, vocs=None, include_inputs_and_outputs=T
             # Evaluation
             inputs0 = inputs.copy()       # Make a copy, because the evaluate function might modify the inputs.
             outputs = evaluate_f(inputs0)
-        
-            obj_eval = vocs_tools.evaluate_objectives(vocs['objectives'], outputs)
-            con_eval = vocs_tools.evaluate_constraints(vocs['constraints'], outputs)
+            
+            obj_eval = vocs_tools.evaluate_objectives(vocs['objectives'], outputs, inputs=inputs)
+            con_eval = vocs_tools.evaluate_constraints(vocs['constraints'], outputs, inputs=inputs)
             
         else:
         # Pure number function

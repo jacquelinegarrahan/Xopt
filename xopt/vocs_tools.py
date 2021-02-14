@@ -68,21 +68,47 @@ def weight_list(objective_dict):
 #-------------------------------------------------------
 # Output evaulation
 
-def evaluate_objectives(objective_dict, output):
+def evaluate_objectives(objective_dict, outputs, inputs=None):
     """
     Uses objective dict and output dict to return a list of objective values,
     ordered by sorting the objective keys.
+    
+    If inputs are given, these will also be checked.
     """
-    return [output[k] for k in skeys(objective_dict)]
+    
+    o = {} # Collect o
+    for k in skeys(objective_dict):
+        if k in outputs:
+            o[k] = outputs[k]
+        elif inputs and k in inputs:
+            o[k] = inputs[k]
+        else:
+            raise ValueError(f'Objective {k} not present in outputs or inputs')
+    
+    return list(o.values())
 
-def evaluate_constraints(constraint_dict, output):
+
+
+def evaluate_constraints(constraint_dict, outputs, inputs=None):
     """
     Use constraint dict and output dict to form a list of constraint evaluations.
     A constraint is satisfied if the evaluation is > 0.
     """
+    
+    # Collect only the needed outputs
+    o = {} # Collect o
+    for k in skeys(constraint_dict):
+        if k in outputs:
+            o[k] = outputs[k]
+        elif inputs and k in inputs:
+            o[k] = inputs[k]
+        else:
+            raise ValueError(f'Objective {k} not present in outputs or inputs')    
+    outputs = o
+    
     results = []
     for k in skeys(constraint_dict):
-        x = output[k]
+        x = outputs[k]
         op, d = constraint_dict[k]
         op = op.upper() # Allow any case
         
