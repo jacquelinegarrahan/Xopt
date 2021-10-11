@@ -2,14 +2,14 @@ import copy
 
 from xopt import Xopt
 import pytest
-from .evaluators import TNK
+from .test_functions import TNK
 
 
 class TestClassMOBO:
     VOCS = TNK.VOCS
     config = {'vocs': TNK.VOCS.copy()}
     config['simulation'] = {'name': 'test_TNK',
-                            'evaluate': 'xopt.tests.evaluators.TNK.evaluate_TNK'}
+                            'evaluate': 'xopt.tests.test_functions.TNK.evaluate_TNK'}
     config['xopt'] = {'output_path': '', 'verbose': False}
     config['algorithm'] = {'name': 'mobo',
                            'options': {

@@ -12,7 +12,6 @@ VOCS = {
         'x1': [0, 0.2],
         'x2': [0, 0.2],
         'x3': [0, 0.2],
-        'cost': [0, 1.0]
     },
     'objectives': {
         'y1': 'MINIMIZE',
@@ -27,6 +26,10 @@ VOCS = {
 def evaluate(inputs, extra_option='abc', **params):
     x = np.array((inputs['x1'], inputs['x2'], inputs['x3']))
     outputs = {'y1': np.linalg.norm(x - 0.15)**2}
+
+    # raise random exceptions
+    if np.random.rand() > 0.5:
+        raise Exception('test exception raised')
 
     return outputs
 

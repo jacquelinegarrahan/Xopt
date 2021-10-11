@@ -74,7 +74,7 @@ algorithm:
   
 simulation: 
   name: test_TNK
-  evaluate: xopt.tests.evaluators.TNK.evaluate_TNK  
+  evaluate: xopt.tests.test_functions.TNK.evaluate_TNK  
   
 vocs:
   variables: 

@@ -1,5 +1,5 @@
 from xopt import Xopt
-from .evaluators import quad_3d
+from .test_functions import quad_3d
 from concurrent.futures import ThreadPoolExecutor
 import copy
 
@@ -7,7 +7,7 @@ class TestAsynchMultiFidelity:
     VOCS = quad_3d.VOCS
     config = {'vocs': quad_3d.VOCS.copy()}
     config['simulation'] = {'name': 'Quad 3D',
-                            'evaluate': 'xopt.tests.evaluators.quad_3d.evaluate'}
+                            'evaluate': 'xopt.tests.test_functions.quad_3d.evaluate'}
     config['xopt'] = {'output_path': ''}
     config['algorithm'] = {'name': 'multi_fidelity',
                            'options': {

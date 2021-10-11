@@ -35,22 +35,24 @@ def reformat_config(config: Dict) -> Dict:
         del new_config['xopt']['verbose']
 
     # check simulation
-    if 'function' in new_config['simulation']:
-        warnings.warn('`function` keyword no longer allowed in simulation config, moving to `evaluate`')
-        new_config['simulation']['evaluate'] = new_config['simulation'].pop('function')
+    if 'simulation' in new_config:
+        new_config['evaluate'] = new_config['simulation']
+        warnings.warn(
+            '`simulation` keyword no longer allowed in evaluate config, moving to '
+            '`evaluate`')
+        del new_config['simulation']
 
-
-    if 'templates' in new_config['simulation']:
-        warnings.warn('`templates` keyword no longer allowed in simulation config, '
+    if 'templates' in new_config['evaluate']:
+        warnings.warn('`templates` keyword no longer allowed in evaluate config, '
                        'moving to `options`')
         try:
-            new_config['simulation']['options'].update({'templates': new_config[
-                'simulation']['templates']})
+            new_config['evaluate']['options'].update({'templates': new_config[
+                'evaluate']['templates']})
         except KeyError:
-            new_config['simulation']['options'] = {'templates': new_config[
-                'simulation']['templates']}
+            new_config['evaluate']['options'] = {'templates': new_config[
+                'evaluate']['templates']}
 
-        del new_config['simulation']['templates']
+        del new_config['evaluate']['templates']
 
     # check vocs
     for ele in ['name', 'description', 'simulation']:
@@ -62,12 +64,12 @@ def reformat_config(config: Dict) -> Dict:
     # move templates to simulation
     if 'templates' in new_config['vocs']:
         logger.warning('`templates` keyword no longer allowed in vocs config, '
-                       'moving to simulation `options`')
+                       'moving to evaluate `options`')
         try:
-            new_config['simulation']['options'].update({'templates': new_config[
+            new_config['evaluate']['options'].update({'templates': new_config[
                 'vocs']['templates']})
         except KeyError:
-            new_config['simulation']['options'] = {'templates': new_config[
+            new_config['evaluate']['options'] = {'templates': new_config[
                 'vocs']['templates']}
 
         del new_config['vocs']['templates']

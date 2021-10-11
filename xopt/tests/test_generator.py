@@ -4,7 +4,7 @@ from botorch.acquisition.analytic import UpperConfidenceBound
 from botorch.exceptions.errors import BotorchError
 import torch
 from botorch.models import SingleTaskGP
-from .evaluators import TNK
+from .test_functions import TNK
 
 
 def _good_test(model, beta):

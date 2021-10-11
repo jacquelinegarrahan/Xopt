@@ -22,7 +22,7 @@ algorithm:
 
 simulation:
   name: impact_with_distgen
-  evaluate: xopt.tests.evaluators.TNK.evaluate_TNK
+  evaluate: xopt.tests.test_functions.TNK.evaluate_TNK
   options:
     verbose: false
     workdir: .

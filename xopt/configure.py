@@ -28,9 +28,9 @@ XOPT_DEFAULTS = {
     'output_path': '.'
 }
 
-SIMULATION_DEFAULTS = {
+EVALUATE_DEFAULTS = {
     'name': None,
-    'evaluate': None,
+    'function': None,
     'options': None,
 }
 
@@ -52,7 +52,7 @@ VOCS_DEFAULTS = {
 ALL_DEFAULTS = {
     'xopt': XOPT_DEFAULTS,
     'algorithm': ALGORITHM_DEFAULTS,
-    'simulation': SIMULATION_DEFAULTS,
+    'simulation': EVALUATE_DEFAULTS,
     'vocs': VOCS_DEFAULTS
 }
 
@@ -135,8 +135,8 @@ def configure_simulation(sim_config: Dict) -> Dict:
      'options': {'archive_path': '.', 'merit_f': None}}
         
     """
-    check_config_against_defaults(sim_config, SIMULATION_DEFAULTS)
-    fill_defaults(sim_config, SIMULATION_DEFAULTS)
+    check_config_against_defaults(sim_config, EVALUATE_DEFAULTS)
+    fill_defaults(sim_config, EVALUATE_DEFAULTS)
     
     f_name = sim_config['evaluate']
     

@@ -1,19 +1,20 @@
-
-
+import logging
 from copy import deepcopy
 
 import yaml
 
-from . import configure
-from xopt.legacy import reformat_config
 from xopt import __version__
-from xopt.tools import expand_paths, load_config, save_config,\
-    random_settings, get_function, isotime
+from xopt.legacy import reformat_config
+from xopt.tools import expand_paths, load_config, get_function, isotime
+from . import configure
+from .tools import DummyExecutor
 
-import logging
 logger = logging.getLogger(__name__)
 
-import sys
+from .algorithms.algorithm import FunctionalAlgorithm
+from .algorithms import KNOWN_ALGORITHMS
+from .evaluators.evaluator import Evaluator
+from .routines import KNOWN_ROUTINES
 
 
 class Xopt:
@@ -37,12 +38,12 @@ class Xopt:
         self.config = deepcopy(config)
         self.configured = False
 
-        self.results = None
+        self.routine = None
+        self.algorithm = None
+        self.evaluator = None
+        self.vocs = None
 
-        self.run_f = None
-        self.evaluate_f = None
-
-        if config:
+        if config is not None:
             self.config = load_config(self.config)
 
             # make sure configure has the required keys
@@ -50,12 +51,12 @@ class Xopt:
                 if name not in self.config:
                     raise Exception(f'Key {name} is required in config for Xopt')
 
-            # load any high level config files
-            for ele in ['xopt', 'simulation', 'algorithm', 'vocs']:
-                self.config[ele] = load_config(self.config[ele])
-
             # reformat old config files if needed
             self.config = reformat_config(self.config)
+
+            # load any high level config files
+            for ele in ['xopt', 'evaluate', 'algorithm', 'vocs']:
+                self.config[ele] = load_config(self.config[ele])
 
             # do configuration
             self.configure_all()
@@ -76,40 +77,69 @@ class Xopt:
         vocs, which contains the simulation name, and templates
 
         """
-
-        self.configure_xopt()
-        self.configure_algorithm()
-        self.configure_simulation()
-        self.configure_vocs()
-
         # expand all paths
         self.config = expand_paths(self.config, ensure_exists=True)
 
-        # Get the actual functions
-        self.run_f = get_function(self.algorithm['function'])
-        self.evaluate_f = get_function(self.simulation['evaluate'])
+        self.configure_vocs()
+        self.configure_algorithm()
+        self.configure_evaluate()
+        self.configure_routine()
 
         self.configured = True
 
     # --------------------------
-    # Configure
-    def configure_xopt(self):
-        """ configure xopt """
-        # check and fill defaults
-        configure.configure_xopt(self.config['xopt'])
+    # Configures
+    def configure_routine(self):
+        """ configure routine """
+        assert self.algorithm and self.evaluator, 'algorithm and evaluator not ' \
+                                                  'initialized yet!'
+        rtype = self.config['xopt'].get('routine', 'batched')
+        path = self.config['xopt'].get('output_path', '.')
+        if rtype in KNOWN_ROUTINES:
+            self.routine = KNOWN_ROUTINES['rtype'](self.config,
+                                                   self.evaluator,
+                                                   self.algorithm,
+                                                   output_path=path
+                                                   )
+        else:
+            ValueError('must use a named routine')
 
     def configure_algorithm(self):
         """ configure algorithm """
-        self.config['algorithm'] = configure.configure_algorithm(self.config[
-                                                                    'algorithm'])
+        # get algorithm via name or function
+        alg_name = self.config['algorithm'].get('name', None)
+        alg_function = self.config['algorithm'].get('function', None)
+        alg_options = self.config['algorithm'].get('options', {})
 
-    def configure_simulation(self):
-        self.config['simulation'] = configure.configure_simulation(self.config[
-                                                                    'simulation'])
+        if alg_name is not None:
+            if alg_name in KNOWN_ALGORITHMS:
+                # get algorithm object
+                self.algorithm = KNOWN_ALGORITHMS[alg_name](self.vocs, **alg_options)
+            else:
+                raise ValueError(f'Name `{alg_name}` not in list of known '
+                                 f'algorithms, {KNOWN_ALGORITHMS}')
+
+        elif alg_function is not None:
+            # create algorithm object from callable function
+            alg_function = get_function(alg_function)
+            self.algorithm = FunctionalAlgorithm(self.vocs,
+                                                 alg_function,
+                                                 **alg_options)
+        else:
+            raise ValueError('must use a named algorithm or specify a algorithm '
+                             'function')
+
+    def configure_evaluate(self):
+        evaluate_function = get_function(self.config['evaluate']['function'])
+        executor = self.config['evaluate'].get('executor', DummyExecutor())
+        evaluate_options = self.config['evaluate'].get('options', {})
+        self.evaluator = Evaluator(self.vocs,
+                                   evaluate_function,
+                                   executor,
+                                   evaluate_options)
 
     def configure_vocs(self):
         self.config['vocs'] = configure.configure_vocs(self.config['vocs'])
-
 
     # --------------------------
     # Saving and Loading from file
@@ -117,23 +147,6 @@ class Xopt:
         """Load config from file (JSON or YAML) or data"""
         self.config = load_config(config)
         self.configure_all()
-
-    def save(self, file):
-        """Save config to file (JSON or YAML)"""
-        save_config(self.config, file)
-
-    # Conveniences
-    @property
-    def algorithm(self):
-        return self.config['algorithm']
-
-    @property
-    def simulation(self):
-        return self.config['simulation']
-
-    @property
-    def vocs(self):
-        return self.config['vocs']
 
     # --------------------------
     # Run
@@ -143,50 +156,7 @@ class Xopt:
 
         logger.info(f'Starting at time {isotime()}')
 
-        opts = self.algorithm['options']
-
-        # Special for genetic algorithms
-        if self.results and 'population' in opts:
-            opts['population'] = self.results
-
-        self.results = self.run_f(vocs=self.vocs,
-                                  evaluate_f=self.evaluate,
-                                  executor=executor,
-                                  output_path=self.config['xopt']['output_path'],
-                                  **opts)
-
-    def random_inputs(self):
-        return random_settings(self.vocs)
-
-    def random_evaluate(self, check_vocs=True):
-        """
-        Makes random inputs and runs evaluate.
-        
-        If check_vocs, will check that all keys in vocs constraints and objectives
-        are in output.
-        """
-        inputs = self.random_inputs()
-        outputs = self.evaluate(inputs)
-        if check_vocs:
-            err_keys = []
-            for k in self.vocs['objectives']:
-                if k not in outputs:
-                    err_keys.append(k)
-            for k in self.vocs['constraints']:
-                if k not in outputs:
-                    err_keys.append(k)
-            assert len(err_keys) == 0, f'Required keys not found in output: {err_keys}'
-
-        return outputs
-
-    def evaluate(self, inputs):
-        """Evaluate should take one argument: A dict of inputs. """
-        options = self.simulation['options']
-        evaluate_f = self.evaluate_f
-        if options:
-            return evaluate_f(inputs, **options)
-        else:
-            return evaluate_f(inputs)
+        return self.routine.run()
 
     def __getitem__(self, config_item):
         """

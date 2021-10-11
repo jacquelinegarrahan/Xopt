@@ -3,14 +3,14 @@ import copy
 import pytest
 
 from xopt import Xopt
-from .evaluators import TNK
+from .test_functions import TNK
 from ..bayesian.utils import UnsupportedError
 
 class TestClassBayesExp:
     VOCS = TNK.VOCS
     config = {'vocs': TNK.VOCS.copy()}
     config['simulation'] = {'name': 'test_TNK',
-                            'evaluate': 'xopt.tests.evaluators.TNK.evaluate_TNK'}
+                            'evaluate': 'xopt.tests.test_functions.TNK.evaluate_TNK'}
     config['xopt'] = {'output_path': ''}
     config['algorithm'] = {'name': 'bayesian_exploration',
                            'options': {
