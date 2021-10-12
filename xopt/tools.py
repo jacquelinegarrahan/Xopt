@@ -76,7 +76,7 @@ def save_config(data, filename, verbose=True):
     if filename.endswith('json'):
         with open(filename, 'w') as f:
             json.dump(data, f, ensure_ascii=True, indent='  ',
-                     cls=NpEncoder)
+                      cls=NpEncoder)
         if verbose:
             logger.info(f'Config written as JSON to {filename}')
     elif filename.endswith('yaml'):
@@ -447,9 +447,9 @@ def get_n_required_fuction_arguments(f):
     """
     n = 0
     for k, v in inspect.signature(f).parameters.items():
-        if v.kind == inspect.Parameter.POSITIONAL_OR_KEYWORD:
-            if v.default == inspect.Parameter.empty:
-                n += 1
+        if (v.kind == inspect.Parameter.POSITIONAL_OR_KEYWORD
+                and v.default == inspect.Parameter.empty):
+            n += 1
     return n
 
 

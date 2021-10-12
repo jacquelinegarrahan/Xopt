@@ -11,7 +11,7 @@ class TestXoptConfig:
         # check default configs
         assert list(X.config.keys()) == ['xopt',
                                          'algorithm',
-                                         'simulation',
+                                         'evaluate',
                                          'vocs']
 
         # check bad config files
@@ -39,35 +39,41 @@ class TestXoptConfig:
 
         # retry with a bad function name
         with pytest.raises(Exception):
-            X.algorithm['function'] = 'dummy'
+            X.algorithm_config['function'] = 'dummy'
             X.configure_algorithm()
 
         # retry with bad module
-        X.algorithm['function'] = 'dummy.dummy'
+        X.algorithm_config['function'] = 'dummy.dummy'
         with pytest.raises(ModuleNotFoundError):
             X.configure_algorithm()
 
-    def test_simulation_config(self):
+    def test_evaluate_config(self):
         X = Xopt()
 
         # default has no function
         with pytest.raises(ValueError):
-            X.configure_simulation()
+            X.configure_evaluate()
 
         # specify a good function
-        X.simulation['evaluate'] = lambda x: x
-        X.configure_simulation()
+        X.evaluate_config['function'] = lambda x: x
+        X.configure_evaluate()
 
         # specify a bad function
-        X.simulation['evaluate'] = lambda x, y: x
-        with pytest.raises(AssertionError):
-            X.configure_simulation()
+        X.evaluate_config['function'] = lambda x, y: x
+        with pytest.raises(ValueError):
+            X.configure_evaluate()
+
+        # specify a bad key
+        X.evaluate_config['evaluate'] = None
+        with pytest.raises(KeyError):
+            X.configure_evaluate()
+        del X.evaluate_config['evaluate']
 
         def dummy(x, y=None):
             return x
-        X.simulation['evaluate'] = dummy
-        X.configure_simulation()
-        assert X.config['simulation']['options'] == {'y': None}
+        X.evaluate_config['function'] = dummy
+        X.configure_evaluate()
+        assert X.evaluate_config['options'] == {'y': None}
 
     def test_vocs_config(self):
         X = Xopt()

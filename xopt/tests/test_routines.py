@@ -7,12 +7,12 @@ from ..tools import DummyExecutor
 
 class TestRoutines:
     def test_batched(self):
-        E = Evaluator(evaluate,
+        E = Evaluator(VOCS,
+                      evaluate,
                       DummyExecutor(),
-                      VOCS)
+                      )
 
         alg = RandomSample(VOCS, 3, 2)
         config = {'vocs': VOCS}
         r = Batched(config, E, alg)
         print(r.run())
-

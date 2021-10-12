@@ -52,7 +52,7 @@ VOCS_DEFAULTS = {
 ALL_DEFAULTS = {
     'xopt': XOPT_DEFAULTS,
     'algorithm': ALGORITHM_DEFAULTS,
-    'simulation': EVALUATE_DEFAULTS,
+    'evaluate': EVALUATE_DEFAULTS,
     'vocs': VOCS_DEFAULTS
 }
 

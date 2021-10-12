@@ -46,10 +46,10 @@ class FunctionalAlgorithm(Algorithm):
 
     def __init__(self,
                  vocs: Dict,
-                 f: Callable,
+                 function: Callable,
                  options: Dict = None
                  ):
-        self.f = f
+        self.function = function
         self.max_calls = options.pop('max_calls', 1)
         self.n_calls = 0
         self.options = options or {}
@@ -58,7 +58,7 @@ class FunctionalAlgorithm(Algorithm):
     def generate(self, data: pd.DataFrame) -> pd.DataFrame:
 
         # check signature of callable to pass callable correct data
-        sig = signature(self.f)
+        sig = signature(self.function)
         sig_pos_parameters = []
         results = None
         for name, ele in sig.parameters.items():
@@ -66,9 +66,9 @@ class FunctionalAlgorithm(Algorithm):
                 sig_pos_parameters += [name]
 
         if sig_pos_parameters == ['vocs']:
-            results = self.f(self.vocs, **self.options)
+            results = self.function(self.vocs, **self.options)
         elif sig_pos_parameters == ['vocs', 'data']:
-            results = self.f(self.vocs, data, **self.options)
+            results = self.function(self.vocs, data, **self.options)
         elif sig_pos_parameters == ['vocs', 'X', 'Y']:
             # convert pandas dataframe to numpy
             X = data[self.vocs['variables']].to_numpy()
@@ -77,13 +77,13 @@ class FunctionalAlgorithm(Algorithm):
             if 'constraints' in self.vocs:
                 C = data[self.vocs['constraints']].to_numpy()
                 try:
-                    results = self.f(self.vocs, X, Y, C=C, **self.options)
+                    results = self.function(self.vocs, X, Y, C=C, **self.options)
                 except ValueError:
                     logger.error('callable function does not support constraints with '
                                  'keyword `C`')
 
             else:
-                results = self.f(self.vocs, X, Y, **self.options)
+                results = self.function(self.vocs, X, Y, **self.options)
         else:
             raise BadFunctionError('callable function input arguments not correct, '
                                    'must be one of the following forms:'

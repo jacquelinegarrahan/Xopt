@@ -34,7 +34,7 @@ def sampler_evaluate(inputs: Dict,
         logger.error(f"Exception caught in {__name__}")
         outputs = {
             "Exception": str(ex),
-            "Traceback": traceback.print_tb(ex.__traceback__),
+            #"Traceback": traceback.format_exc(ex),
         }
 
     finally:
