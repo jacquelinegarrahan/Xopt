@@ -96,13 +96,18 @@ class Xopt:
         assert self.algorithm and self.evaluator, 'algorithm and evaluator not ' \
                                                   'initialized yet!'
         rtype = self.config['xopt'].get('routine', 'batched')
-        path = self.config['xopt'].get('output_path', '.')
+        routine_options = self.config['xopt'].get('options', {})
+
+        # get default options
         if rtype in KNOWN_ROUTINES:
-            self.routine = KNOWN_ROUTINES['rtype'](self.config,
-                                                   self.evaluator,
-                                                   self.algorithm,
-                                                   output_path=path
-                                                   )
+            routine_default_options = get_function_defaults(KNOWN_ROUTINES[rtype])
+            self.config['xopt']['options'] = fill_defaults(routine_options,
+                                                           routine_default_options)
+            self.routine = KNOWN_ROUTINES[rtype](self.config,
+                                                 self.evaluator,
+                                                 self.algorithm,
+                                                 **self.config['xopt']['options']
+                                                 )
         else:
             ValueError('must use a named routine')
 
@@ -158,6 +163,7 @@ class Xopt:
 
     def configure_vocs(self):
         self.config['vocs'] = configure_vocs(self.config['vocs'])
+        self.vocs = self.config['vocs']
 
     # --------------------------
     # Loading from file

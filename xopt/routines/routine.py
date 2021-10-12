@@ -16,7 +16,7 @@ class Routine(ABC):
                  config: Dict,
                  evaluator: Evaluator,
                  algorithm: Algorithm,
-                 output_path: str = '.'):
+                 output_path: str = ''):
         self.config = config
         self.vocs = config['vocs']
         self.evaluator = evaluator
@@ -41,7 +41,7 @@ class Routine(ABC):
 
         # add data
         if self.data is not None:
-            info.update({'results': self.data.to_dict()})
+            info.update({'results': self.data.to_json()})
 
         with open(os.path.join(self.output_path, 'results.json'), 'w') as outfile:
             json.dump(info, outfile)

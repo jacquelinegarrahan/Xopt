@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 def sampler_evaluate(inputs: Dict,
                      evaluate_f: Callable,
-                     *eval_args):
+                     **eval_args):
     """
     Wrapper to catch any exceptions
 
@@ -27,7 +27,7 @@ def sampler_evaluate(inputs: Dict,
     outputs = None
 
     try:
-        outputs = evaluate_f(inputs, *eval_args)
+        outputs = evaluate_f(inputs, **eval_args)
 
     except Exception as ex:
         # No need to print a nasty exception
@@ -66,7 +66,6 @@ class Evaluator:
             Samples to be evaluated, should be 2D and the last axis should have the
             same length of len(vocs['variables'])
         """
-        variable_names = self.vocs['variables']
         self.futures = {}
 
         assert len(samples.shape) == 2

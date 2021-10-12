@@ -12,7 +12,7 @@ class RandomSample(FunctionalAlgorithm):
         def _random_sample(vocs):
             bounds = get_bounds(vocs)
             r = np.random.rand(n_samples, bounds.shape[-1])
-            return (r - bounds[0]) / (bounds[1] - bounds[0])
+            return r * (bounds[1] - bounds[0]) + bounds[0]
 
         super(RandomSample, self).__init__(vocs,
                                            _random_sample,

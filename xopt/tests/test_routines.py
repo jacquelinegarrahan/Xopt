@@ -1,14 +1,14 @@
 from ..routines.batched import Batched
 from ..evaluators.evaluator import Evaluator
 from ..algorithms.random import RandomSample
-from .test_functions.quad_3d import VOCS, evaluate
+from .test_functions.TNK import VOCS, evaluate_TNK
 from ..tools import DummyExecutor
 
 
 class TestRoutines:
     def test_batched(self):
         E = Evaluator(VOCS,
-                      evaluate,
+                      evaluate_TNK,
                       DummyExecutor(),
                       )
 

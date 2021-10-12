@@ -31,6 +31,28 @@ class Algorithm(ABC):
         """
         return False
 
+    def dataframe_to_numpy(self, data: pd.DataFrame,
+                           use_transformed=True) -> Dict:
+        if use_transformed:
+            X = data[[ele + '_t' for ele in self.vocs['variables']]].to_numpy()
+            Y = data[[ele + '_t' for ele in self.vocs['objectives']]].to_numpy()
+        else:
+            X = data[self.vocs['variables']].to_numpy()
+            Y = data[self.vocs['objectives']].to_numpy()
+
+        if self.vocs['constraints'] is not None:
+            if use_transformed:
+                C = data[[ele + '_t' for ele in self.vocs['constraints']]].to_numpy()
+            else:
+                C = data[self.vocs['constraints']].to_numpy()
+
+            return {'X': X, 'Y': Y, 'C': C}
+        else:
+            return {'X': X, 'Y': Y}
+
+    def numpy_to_dataframe(self, X):
+        return pd.DataFrame(X, columns=self.vocs['variables'])
+
 
 class FunctionalAlgorithm(Algorithm):
     """
@@ -71,11 +93,12 @@ class FunctionalAlgorithm(Algorithm):
             results = self.function(self.vocs, data, **self.options)
         elif sig_pos_parameters == ['vocs', 'X', 'Y']:
             # convert pandas dataframe to numpy
-            X = data[self.vocs['variables']].to_numpy()
-            Y = data[self.vocs['objectives']].to_numpy()
+            input_data = self.dataframe_to_numpy(data)
+            X = input_data['X']
+            Y = input_data['Y']
 
-            if 'constraints' in self.vocs:
-                C = data[self.vocs['constraints']].to_numpy()
+            if 'C' in input_data:
+                C = input_data['C']
                 try:
                     results = self.function(self.vocs, X, Y, C=C, **self.options)
                 except ValueError:

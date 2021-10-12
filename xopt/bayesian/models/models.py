@@ -12,7 +12,11 @@ from ..outcome_transforms import NanEnabledStandardize
 from ...vocs_tools import get_bounds
 
 
-def create_model(train_x, train_y, train_c, vocs, custom_model=None, **kwargs):
+def create_model(train_data, vocs, custom_model=None, **kwargs):
+    train_x = train_data['X']
+    train_y = train_data['Y']
+    train_c = train_data.get('C', None)
+
     input_normalize = Normalize(
         len(vocs["variables"]),
         torch.tensor(
