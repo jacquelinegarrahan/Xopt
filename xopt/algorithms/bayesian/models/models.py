@@ -9,7 +9,7 @@ from gpytorch.mlls.exact_marginal_log_likelihood import ExactMarginalLogLikeliho
 
 from ..models.nan_enabled import get_nan_model
 from ..outcome_transforms import NanEnabledStandardize
-from ...vocs_tools import get_bounds
+from xopt.vocs_tools import get_bounds
 
 
 def create_model(train_data, vocs, custom_model=None, **kwargs):

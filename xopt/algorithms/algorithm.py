@@ -3,13 +3,10 @@ from abc import ABC, abstractmethod
 from inspect import signature
 from typing import Callable, Dict
 from .utils import transform_data
-from ..utils import check_dataframe
+from ..utils import check_dataframe, BadFunctionError
 import pandas as pd
 
 logger = logging.getLogger(__name__)
-
-
-
 
 
 class Algorithm(ABC):

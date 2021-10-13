@@ -8,7 +8,7 @@ from botorch.utils.sampling import draw_sobol_samples
 from ..data import gather_and_save_training_data, get_data_json
 from ..generators.generator import BayesianGenerator
 from ..utils import get_candidates, submit_candidates
-from ...vocs_tools import get_bounds
+from xopt.vocs_tools import get_bounds
 
 
 def synch(

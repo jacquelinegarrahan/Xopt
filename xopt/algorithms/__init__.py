@@ -1,5 +1,5 @@
 from .random import RandomSample
-from .bayesian import UpperConfidenceBound
+from .bayesian.algorithms import UpperConfidenceBound
 KNOWN_ALGORITHMS = {
     'cnsga': 'xopt.cnsga.cnsga',
     'random_sample': RandomSample,

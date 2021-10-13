@@ -5,9 +5,9 @@ from botorch.acquisition import AcquisitionFunction
 from botorch.acquisition.monte_carlo import qUpperConfidenceBound
 from botorch.optim.optimize import optimize_acqf
 
-from .algorithm import Algorithm
-from ..bayesian.models.models import create_model
-from ..vocs_tools import get_bounds
+from ..algorithm import Algorithm
+from .models.models import create_model
+from ...vocs_tools import get_bounds
 from typing import Dict, Callable
 import pandas as pd
 

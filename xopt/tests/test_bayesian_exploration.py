@@ -4,7 +4,7 @@ import pytest
 
 from xopt import Xopt
 from .test_functions import TNK
-from ..bayesian.utils import UnsupportedError
+from xopt.algorithms.bayesian.utils import UnsupportedError
 
 class TestClassBayesExp:
     VOCS = TNK.VOCS

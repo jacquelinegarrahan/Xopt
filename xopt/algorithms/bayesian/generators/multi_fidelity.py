@@ -11,7 +11,7 @@ from botorch.optim.optimize import optimize_acqf
 from botorch.acquisition.utils import project_to_target_fidelity
 from botorch.optim.initializers import gen_one_shot_kg_initial_conditions
 
-from ...vocs_tools import get_bounds
+from xopt.vocs_tools import get_bounds
 from .generator import BayesianGenerator
 
 # Logger

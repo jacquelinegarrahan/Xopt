@@ -1,7 +1,5 @@
-import pytest
-
-from ..bayesian.outcome_transforms import NanEnabledStandardize
-from ..bayesian.input_transforms import CostAwareNormalize
+from xopt.algorithms.bayesian import NanEnabledStandardize
+from xopt.algorithms.bayesian import CostAwareNormalize
 import torch
 import numpy as np
 

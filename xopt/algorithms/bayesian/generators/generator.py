@@ -10,7 +10,7 @@ from botorch.models.model_list_gp_regression import ModelListGP
 from botorch.optim.optimize import optimize_acqf
 from botorch.sampling.samplers import SobolQMCNormalSampler
 
-from ...vocs_tools import get_bounds
+from xopt.vocs_tools import get_bounds
 
 logger = logging.getLogger(__name__)
 

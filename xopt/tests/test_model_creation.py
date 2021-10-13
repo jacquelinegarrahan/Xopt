@@ -1,5 +1,5 @@
 import torch
-from ..bayesian.models.models import create_model
+from xopt.algorithms.bayesian import create_model
 import numpy as np
 
 

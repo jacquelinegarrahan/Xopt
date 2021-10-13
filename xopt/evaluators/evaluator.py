@@ -1,11 +1,11 @@
 import concurrent.futures
-from typing import Dict, Callable
-from concurrent.futures import Executor
-import traceback
-from ..utils import check_dataframe
 import logging
+from concurrent.futures import Executor
+from typing import Dict, Callable
 
 import pandas as pd
+
+from ..utils import check_dataframe
 
 logger = logging.getLogger(__name__)
 

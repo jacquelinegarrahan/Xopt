@@ -15,7 +15,7 @@ from .utils import (
     get_feasability_constraint_status,
     NoValidResultsError,
 )
-from ..tools import NpEncoder
+from xopt.tools import NpEncoder
 
 logger = logging.getLogger(__name__)
 

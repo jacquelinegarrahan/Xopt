@@ -9,7 +9,7 @@ from .models.models import create_model
 from .optim.asynch import asynch
 from .optim.synch import synch
 from .utils import get_corrected_outputs, get_feasability_constraint_status
-from ..tools import DummyExecutor
+from xopt.tools import DummyExecutor
 
 """
     Main optimization function for Bayesian optimization
