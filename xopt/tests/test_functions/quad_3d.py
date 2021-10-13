@@ -9,9 +9,9 @@ VOCS = {
     'name': '1D test',
     'description': '1D test function (with optional multi-fidelity) for debugging',
     'variables': {
-        'x1': [0, 0.2],
-        'x2': [0, 0.2],
-        'x3': [0, 0.2],
+        'x1': [0, 1.0],
+        'x2': [0, 1.0],
+        'x3': [0, 1.0],
     },
     'objectives': {
         'y1': 'MINIMIZE',

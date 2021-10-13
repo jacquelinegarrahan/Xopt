@@ -2,7 +2,7 @@ import concurrent.futures
 from typing import Dict, Callable
 from concurrent.futures import Executor
 import traceback
-
+from ..utils import check_dataframe
 import logging
 
 import pandas as pd
@@ -104,8 +104,14 @@ class Evaluator:
                 r.update({'status': 'done'})
             results += [r]
 
-        # return dataframe
-        return pd.DataFrame(results)
+        # create dataframe
+        data = pd.DataFrame(results)
+
+        # check to make sure at least one valid measurement has been made, else raise
+        # an exception
+        check_dataframe(data, self.vocs)
+
+        return data
 
 
 

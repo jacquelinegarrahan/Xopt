@@ -2,14 +2,14 @@ import logging
 from abc import ABC, abstractmethod
 from inspect import signature
 from typing import Callable, Dict
-
+from .utils import transform_data
+from ..utils import check_dataframe
 import pandas as pd
 
 logger = logging.getLogger(__name__)
 
 
-class BadFunctionError(ValueError):
-    pass
+
 
 
 class Algorithm(ABC):
@@ -31,8 +31,26 @@ class Algorithm(ABC):
         """
         return False
 
+    def transform_data(self, data: pd.DataFrame) -> pd.DataFrame:
+        """
+        transform data for use in algorithm,
+        override in subclass to change behavior
+
+        Defualt behavior
+        ----------------
+        transforms data according to vocs:
+        - nomalizes variables based on bounds
+        - flips sign of objectives if target is 'MAXIMIZE'
+        - modifies costraint values; feasible if less than or equal to zero
+        Adds columns to dataframe with subscript `_t`
+        """
+        check_dataframe(data, self.vocs)
+        return transform_data(data, self.vocs)
+
     def dataframe_to_numpy(self, data: pd.DataFrame,
                            use_transformed=True) -> Dict:
+
+        check_dataframe(data, self.vocs)
         if use_transformed:
             X = data[[ele + '_t' for ele in self.vocs['variables']]].to_numpy()
             Y = data[[ele + '_t' for ele in self.vocs['objectives']]].to_numpy()

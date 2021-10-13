@@ -25,6 +25,7 @@ class BayesianAlgorithm(Algorithm, ABC):
                  ):
         """
         General Bayesian optimization algorithm
+        NOTE: we assume maximization for the acquisition function
         """
         super(BayesianAlgorithm, self).__init__(vocs)
         self.model = None
@@ -55,10 +56,14 @@ class BayesianAlgorithm(Algorithm, ABC):
         Generate datapoints for sampling using an acquisition function and a model
         """
 
-        # get data from dataframe and convert to torch tensors
-        train_data = self.dataframe_to_numpy(data)
+        # get valid data from dataframe and convert to torch tensors
+        valid_df = data.loc[data['status'] == 'done']
+        train_data = self.dataframe_to_numpy(valid_df)
         for name, val in train_data.items():
             train_data[name] = torch.tensor(train_data[name], **self.tkwargs)
+
+        # negate objective values -> bototrch assumes maximization
+        train_data['Y'] = -train_data['Y']
 
         # create and train model
         self.model = create_model(train_data, vocs=self.vocs)
