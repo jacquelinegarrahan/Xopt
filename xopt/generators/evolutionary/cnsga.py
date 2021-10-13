@@ -1,9 +1,9 @@
-from ..algorithm import FunctionalAlgorithm
+from ..generator import FunctionalGenerator
 from typing import Dict
 import numpy as np
 
 
-class CNSGA(FunctionalAlgorithm):
+class CNSGA(FunctionalGenerator):
     def __init__(self, vocs: Dict, n_generations=1, **kwargs):
         options = kwargs
         options['max_calls'] = n_generations
@@ -11,7 +11,7 @@ class CNSGA(FunctionalAlgorithm):
 
     def generate_population(self, X, Y, **kwargs) -> np.ndarray:
         """
-        fill in code here for CNSGA generation generation
+        fill in code here for NSGA generation generation
         """
 
 

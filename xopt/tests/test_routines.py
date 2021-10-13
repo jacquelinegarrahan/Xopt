@@ -1,6 +1,6 @@
-from ..routines.batched import Batched
+from ..algorithms.batched import Batched
 from ..evaluators.evaluator import Evaluator
-from ..algorithms.random import RandomSample
+from ..generators.random import RandomSample
 from .test_functions.TNK import VOCS, evaluate_TNK
 from ..tools import DummyExecutor
 

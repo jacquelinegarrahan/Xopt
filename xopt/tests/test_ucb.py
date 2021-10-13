@@ -9,7 +9,7 @@ class TestUCB:
       options:
         n_initial_samples: 5
 
-    algorithm:
+    generator:
       name: upper_confidence_bound
       options:  
         n_steps: 10

@@ -9,16 +9,16 @@ class TestAsynchMultiFidelity:
     config['simulation'] = {'name': 'Quad 3D',
                             'evaluate': 'xopt.tests.test_functions.quad_3d.evaluate'}
     config['xopt'] = {'output_path': ''}
-    config['algorithm'] = {'name': 'multi_fidelity',
+    config['generator'] = {'name': 'multi_fidelity',
                            'options': {
                                'processes': 2,
                                'budget': 3,
                                'generator_options': {}
                            }}
 
-    config['algorithm']['options']['generator_options']['num_restarts'] = 2
-    config['algorithm']['options']['generator_options']['raw_samples'] = 2
-    config['algorithm']['options']['generator_options']['base_acq'] = None
+    config['generator']['options']['generator_options']['num_restarts'] = 2
+    config['generator']['options']['generator_options']['raw_samples'] = 2
+    config['generator']['options']['generator_options']['base_acq'] = None
 
     def test_multi_fidelity_base(self):
         test_config = copy.deepcopy(self.config)
@@ -28,7 +28,7 @@ class TestAsynchMultiFidelity:
 
     def test_multi_fidelity_restart_file(self):
         test_config = copy.deepcopy(self.config)
-        test_config['algorithm']['options']['restart_file'] = \
+        test_config['generator']['options']['restart_file'] = \
             'xopt/tests/asynch_test_results.json'
         X = Xopt(test_config)
         executor = ThreadPoolExecutor()

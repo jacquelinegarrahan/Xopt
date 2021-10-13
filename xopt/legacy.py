@@ -26,9 +26,9 @@ def reformat_config(config: Dict) -> Dict:
     new_config = deepcopy(config)
 
     # check xopt
-    if 'algorithm' in new_config['xopt']:
-        warnings.warn('`algorithm` keyword no longer allowed in xopt config, removing')
-        del new_config['xopt']['algorithm']
+    if 'generator' in new_config['xopt']:
+        warnings.warn('`generator` keyword no longer allowed in xopt config, removing')
+        del new_config['xopt']['generator']
 
     if 'verbose' in new_config['xopt']:
         warnings.warn('`verbose` keyword no longer allowed in xopt config')

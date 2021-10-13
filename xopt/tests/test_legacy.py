@@ -7,9 +7,9 @@ class TestLegacy:
 xopt:
   output_path: .
   verbose: true
-  algorithm: cnsga
+  generator: cnsga
   
-algorithm:
+generator:
   name: cnsga
   function: xopt.cnsga.cnsga
   options:

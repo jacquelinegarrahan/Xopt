@@ -1,5 +1,5 @@
-from xopt.algorithms.bayesian import NanEnabledStandardize
-from xopt.algorithms.bayesian import CostAwareNormalize
+from xopt.generators.bayesian import NanEnabledStandardize
+from xopt.generators.bayesian import CostAwareNormalize
 import torch
 import numpy as np
 

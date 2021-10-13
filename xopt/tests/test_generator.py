@@ -1,5 +1,5 @@
 import pytest
-from xopt.algorithms.bayesian.generators.generator import BayesianGenerator
+from xopt.generators.bayesian.generators.generator import BayesianGenerator
 from botorch.acquisition.analytic import UpperConfidenceBound
 from botorch.exceptions.errors import BotorchError
 import torch

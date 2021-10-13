@@ -125,7 +125,7 @@ def cnsga_toolbox(vocs, selection='auto'):
     # Make toolbox
     toolbox = base.Toolbox()    
     
-    # Register indivitual and population creation routines
+    # Register indivitual and population creation algorithms
     toolbox.register('attr_float', uniform, bound_low, bound_up)
     toolbox.register('individual', tools.initIterate, creator.Individual, toolbox.attr_float)
     toolbox.register('population', tools.initRepeat, list, toolbox.individual)        
@@ -134,7 +134,7 @@ def cnsga_toolbox(vocs, selection='auto'):
     toolbox.register('mate', tools.cxSimulatedBinaryBounded, low=bound_low, up=bound_up, eta=20.0)
     toolbox.register('mutate', tools.mutPolynomialBounded, low=bound_low, up=bound_up, eta=20.0, indpb=1.0/n_var)
     
-    # Register NSGA selection algorithm.
+    # Register NSGA selection generator.
     # NSGA-III should be better for 3 or more objectives
     if selection == 'auto':
         if len(obj) <= 2:
@@ -157,11 +157,11 @@ def cnsga_toolbox(vocs, selection='auto'):
         toolbox.register('select', tools.selSPEA2)
  
     else:
-        raise ValueError(f'Invalid selection algorithm: {selection}')
+        raise ValueError(f'Invalid selection generator: {selection}')
 
         
     logger.info(f'Created toolbox with {n_var} variables, {n_con} constraints, and {n_obj} objectives.')
-    logger.info(f'    Using selection algorithm: {selection}')
+    logger.info(f'    Using selection generator: {selection}')
                          
     return toolbox
     
@@ -370,7 +370,7 @@ def cnsga(
           seed=None,    
           show_progress=False):
     """  
-    Continuous NSGA-II constrained, multi-objective optimization algorithm.
+    Continuous NSGA-II constrained, multi-objective optimization generator.
     
     Futures method, uses an executor as defined in:
     https://www.python.org/dev/peps/pep-3148/
@@ -402,7 +402,7 @@ def cnsga(
         Executor object to run evaluate_f        
 
     population : dict or str, default=None
-        Population dict or JSON filename to restart the algorithm from.
+        Population dict or JSON filename to restart the generator from.
         If None, an initial population will be randomly generated.
         
     output_path : str, default=None
@@ -420,7 +420,7 @@ def cnsga(
         overwritten by initial_x
         
     toolbox : deap.toolbox, default = None
-        Optional toolbox from DEAP to use for further customizing the algorithm.
+        Optional toolbox from DEAP to use for further customizing the generator.
         Otherwise, vocs will be used to create the toolbox.
         
     seed: int, default=None

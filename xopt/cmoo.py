@@ -306,7 +306,7 @@ def cnsga2(executor=None,
     init['rolling_evaluate'] = rolling_evaluate
     problem = ContinuousProblem(**init)
     
-    # Algorithm
+    # Generator
     if population is None:
         sampling = FloatRandomSampling()
     else:

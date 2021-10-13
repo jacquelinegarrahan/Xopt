@@ -12,10 +12,10 @@ from .tools import DummyExecutor, get_n_required_fuction_arguments, \
 
 logger = logging.getLogger(__name__)
 
-from .algorithms.algorithm import FunctionalAlgorithm
-from .algorithms import KNOWN_ALGORITHMS
+from .generators.generator import FunctionalGenerator
+from .generators import KNOWN_ALGORITHMS
 from .evaluators.evaluator import Evaluator
-from .routines import KNOWN_ROUTINES
+from .algorithms import KNOWN_ROUTINES
 
 
 class Xopt:
@@ -62,7 +62,7 @@ class Xopt:
 
         Configuration order:
         xopt
-        algorithm
+        generator
         simulation
         vocs, which contains the simulation name, and templates
 
@@ -76,7 +76,7 @@ class Xopt:
         self.config = reformat_config(self.config)
 
         # load any high level config files
-        for ele in ['xopt', 'evaluate', 'algorithm', 'vocs']:
+        for ele in ['xopt', 'evaluate', 'generator', 'vocs']:
             self.config[ele] = load_config(self.config[ele])
 
         # expand all paths
@@ -93,7 +93,7 @@ class Xopt:
     # Configures
     def configure_routine(self):
         """ configure routine """
-        assert self.algorithm and self.evaluator, 'algorithm and evaluator not ' \
+        assert self.algorithm and self.evaluator, 'generator and evaluator not ' \
                                                   'initialized yet!'
         rtype = self.config['xopt'].get('routine', 'batched')
         routine_options = self.config['xopt'].get('options', {})
@@ -112,28 +112,28 @@ class Xopt:
             ValueError('must use a named routine')
 
     def configure_algorithm(self):
-        """ configure algorithm """
-        # get algorithm via name or function
-        alg_name = self.config['algorithm'].get('name', None)
-        alg_function = self.config['algorithm'].get('function', None)
-        alg_options = self.config['algorithm'].get('options', {})
+        """ configure generator """
+        # get generator via name or function
+        alg_name = self.config['generator'].get('name', None)
+        alg_function = self.config['generator'].get('function', None)
+        alg_options = self.config['generator'].get('options', {})
 
         if alg_name is not None:
             if alg_name in KNOWN_ALGORITHMS:
-                # get algorithm object
+                # get generator object
                 self.algorithm = KNOWN_ALGORITHMS[alg_name](self.vocs, **alg_options)
             else:
                 raise ValueError(f'Name `{alg_name}` not in list of known '
                                  f'algorithms, {KNOWN_ALGORITHMS}')
 
         elif alg_function is not None:
-            # create algorithm object from callable function
+            # create generator object from callable function
             alg_function = get_function(alg_function)
-            self.algorithm = FunctionalAlgorithm(self.vocs,
+            self.algorithm = FunctionalGenerator(self.vocs,
                                                  alg_function,
                                                  **alg_options)
         else:
-            raise ValueError('must use a named algorithm or specify a algorithm '
+            raise ValueError('must use a named generator or specify a generator '
                              'function')
 
     def configure_evaluate(self):
@@ -178,7 +178,7 @@ class Xopt:
 
     @property
     def algorithm_config(self):
-        return self.config['algorithm']
+        return self.config['generator']
 
     # --------------------------
     # Run

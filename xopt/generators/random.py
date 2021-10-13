@@ -1,12 +1,12 @@
-from .algorithm import FunctionalAlgorithm
+from .generator import FunctionalGenerator
 from ..vocs_tools import get_bounds
 import numpy as np
 
 
-class RandomSample(FunctionalAlgorithm):
+class RandomSample(FunctionalGenerator):
     def __init__(self, vocs, n_samples=1, max_calls=1):
         """
-        Algorithm to do random sampling
+        Generator to do random sampling
         """
 
         def _random_sample(vocs):

@@ -11,7 +11,7 @@ class TestClassMultiFidelity:
                             'evaluate':
                                 'xopt.tests.test_functions.multi_fidelity.evaluate'}
     config['xopt'] = {'output_path': '', 'verbose': True}
-    config['algorithm'] = {'name': 'multi_fidelity',
+    config['generator'] = {'name': 'multi_fidelity',
                            'options': {
                                'budget': 2,
                                'processes': 1,
@@ -29,7 +29,7 @@ class TestClassMultiFidelity:
 
     def test_batch(self):
         test_config = copy.deepcopy(self.config)
-        test_config['algorithm']['options']['processes'] = 2
+        test_config['generator']['options']['processes'] = 2
 
         X = Xopt(test_config)
         X.run()

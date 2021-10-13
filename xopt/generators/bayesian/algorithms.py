@@ -5,7 +5,7 @@ from botorch.acquisition import AcquisitionFunction
 from botorch.acquisition.monte_carlo import qUpperConfidenceBound
 from botorch.optim.optimize import optimize_acqf
 
-from ..algorithm import Algorithm
+from ..generator import Generator
 from .models.models import create_model
 from ...vocs_tools import get_bounds
 from typing import Dict, Callable
@@ -16,7 +16,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class BayesianAlgorithm(Algorithm, ABC):
+class BayesianGenerator(Generator, ABC):
     def __init__(self,
                  vocs: Dict,
                  acqisition_function: Callable,
@@ -24,10 +24,10 @@ class BayesianAlgorithm(Algorithm, ABC):
                  optimize_options: Dict = None
                  ):
         """
-        General Bayesian optimization algorithm
+        General Bayesian optimization generator
         NOTE: we assume maximization for the acquisition function
         """
-        super(BayesianAlgorithm, self).__init__(vocs)
+        super(BayesianGenerator, self).__init__(vocs)
         self.model = None
         self.acqisition_function = acqisition_function
         self.acqisition_function_options = acquisition_options or {}
@@ -91,7 +91,7 @@ class BayesianAlgorithm(Algorithm, ABC):
         return self.numpy_to_dataframe(candidates)
 
 
-class UpperConfidenceBound(BayesianAlgorithm):
+class UpperConfidenceBound(BayesianGenerator):
     def __init__(self, vocs, n_steps=1, q=1, beta=2.0, **kwargs):
         acquisition_options = {'beta': beta}
         optimize_options = {'q': q,

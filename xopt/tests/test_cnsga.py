@@ -7,7 +7,7 @@ class TestCNSGA:
     YAML = """
     xopt: {output_path: null}
 
-    algorithm:
+    generator:
       name: cnsga
       options: 
         max_generations: 50, 

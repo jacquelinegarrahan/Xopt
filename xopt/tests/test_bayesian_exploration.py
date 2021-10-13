@@ -4,7 +4,7 @@ import pytest
 
 from xopt import Xopt
 from .test_functions import TNK
-from xopt.algorithms.bayesian.utils import UnsupportedError
+from xopt.generators.bayesian.utils import UnsupportedError
 
 class TestClassBayesExp:
     VOCS = TNK.VOCS
@@ -12,7 +12,7 @@ class TestClassBayesExp:
     config['simulation'] = {'name': 'test_TNK',
                             'evaluate': 'xopt.tests.test_functions.TNK.evaluate_TNK'}
     config['xopt'] = {'output_path': ''}
-    config['algorithm'] = {'name': 'bayesian_exploration',
+    config['generator'] = {'name': 'bayesian_exploration',
                            'options': {
                                'n_initial_samples': 1,
                                'n_steps': 1,
@@ -39,7 +39,7 @@ class TestClassBayesExp:
 
     def test_batch(self):
         test_config = copy.deepcopy(self.config)
-        test_config['algorithm']['options']['generator_options'] = {
+        test_config['generator']['options']['generator_options'] = {
             'batch_size': 2
         }
 

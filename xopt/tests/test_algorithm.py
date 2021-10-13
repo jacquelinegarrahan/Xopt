@@ -1,4 +1,4 @@
-from ..algorithms.algorithm import Algorithm, FunctionalAlgorithm, BadFunctionError
+from ..generators.generator import Generator, FunctionalGenerator, BadFunctionError
 import numpy as np
 import pandas as pd
 import pytest
@@ -44,10 +44,10 @@ class TestAlgorithmBase:
                                     list(self.vocs['objectives']))
 
         for ele in [a, b, c, d, e, f]:
-            alg = FunctionalAlgorithm(self.vocs, ele)
+            alg = FunctionalGenerator(self.vocs, ele)
             alg.generate(data)
 
         for ele in [g, h, l]:
             with pytest.raises(BadFunctionError):
-                alg = FunctionalAlgorithm(self.vocs, ele)
+                alg = FunctionalGenerator(self.vocs, ele)
                 alg.generate(data)

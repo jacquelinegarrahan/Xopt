@@ -10,13 +10,13 @@ class TestXoptConfig:
 
         # check default configs
         assert list(X.config.keys()) == ['xopt',
-                                         'algorithm',
+                                         'generator',
                                          'evaluate',
                                          'vocs']
 
         # check bad config files
         bad_config = {'xopt': None,
-                      'algorithm': None}
+                      'generator': None}
         with pytest.raises(Exception):
             X = Xopt(bad_config)
 
@@ -32,7 +32,7 @@ class TestXoptConfig:
                 X2 = Xopt(new_config)
 
     def test_algorithm_config(self):
-        # test algorithm specification
+        # test generator specification
         X = Xopt()
         with pytest.raises(ValueError):
             X.configure_algorithm()

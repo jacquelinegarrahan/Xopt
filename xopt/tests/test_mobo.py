@@ -11,7 +11,7 @@ class TestClassMOBO:
     config['simulation'] = {'name': 'test_TNK',
                             'evaluate': 'xopt.tests.test_functions.TNK.evaluate_TNK'}
     config['xopt'] = {'output_path': '', 'verbose': False}
-    config['algorithm'] = {'name': 'mobo',
+    config['generator'] = {'name': 'mobo',
                            'options': {
                                'n_initial_samples': 1,
                                'n_steps': 1,
@@ -33,34 +33,34 @@ class TestClassMOBO:
             X.run()
 
         # try with reference point
-        test_config['algorithm']['options']['ref'] = [1.4, 1.4]
+        test_config['generator']['options']['ref'] = [1.4, 1.4]
         X = Xopt(test_config)
         X.run()
 
         # try with bad reference point
         with pytest.raises(ValueError):
-            test_config['algorithm']['options']['ref'] = [1.4, 1.4, 1.4]
+            test_config['generator']['options']['ref'] = [1.4, 1.4, 1.4]
             X = Xopt(test_config)
             X.run()
 
     def test_mobo_batch(self):
         test_config = copy.deepcopy(self.config)
-        test_config['algorithm']['options']['generator_options'] = {
+        test_config['generator']['options']['generator_options'] = {
             'batch_size': 2
         }
 
         # try with reference point
-        test_config['algorithm']['options']['ref'] = [1.4, 1.4]
+        test_config['generator']['options']['ref'] = [1.4, 1.4]
         X = Xopt(test_config)
         X.run()
 
     def test_mobo_proximal(self):
         test_config = copy.deepcopy(self.config)
-        test_config['algorithm']['options']['generator_options'] = {
+        test_config['generator']['options']['generator_options'] = {
             'sigma': [1.0, 1.0],
             'batch_size': 2
         }
-        test_config['algorithm']['options']['ref'] = [1.4, 1.4]
+        test_config['generator']['options']['ref'] = [1.4, 1.4]
 
         # try with sigma matrix
         X = Xopt(test_config)
@@ -69,7 +69,7 @@ class TestClassMOBO:
     def test_mobo_unconstrained(self):
         test_config = copy.deepcopy(self.config)
         test_config['vocs']['constraints'] = {}
-        test_config['algorithm']['options']['ref'] = [1.4, 1.4]
+        test_config['generator']['options']['ref'] = [1.4, 1.4]
 
         # try with sigma matrix
         X = Xopt(test_config)

@@ -190,7 +190,7 @@ def nsga2_toolbox(weights = (1),
     # Make toolbox
     toolbox = base.Toolbox()
 
-    # Register indivitual and population creation routines
+    # Register indivitual and population creation algorithms
     toolbox.register('attr_float', uniform, bound_low, bound_up)
     toolbox.register('individual', tools.initIterate, creator.Individual, toolbox.attr_float)
     toolbox.register('population', tools.initRepeat, list, toolbox.individual)
@@ -199,13 +199,13 @@ def nsga2_toolbox(weights = (1),
     toolbox.register('mate', tools.cxSimulatedBinaryBounded, low=bound_low, up=bound_up, eta=20.0)
     toolbox.register('mutate', tools.mutPolynomialBounded, low=bound_low, up=bound_up, eta=20.0, indpb=1.0/n_variables)
     
-    # Register NSGA selection algorithm
+    # Register NSGA selection generator
     if selection == 'nsga2':
         toolbox.register('select', tools.selNSGA2)
     elif selection == 'nsga3':
         toolbox.register('select', tools.selNSGA3)
     else:
-        print('Warning, invalid selection algorithm', selection)
+        print('Warning, invalid selection generator', selection)
 
     return toolbox
 

@@ -27,10 +27,10 @@
 #    License along with DEAP. If not, see <http://www.gnu.org/licenses/>.
 
 """The :mod:`~deap.creator` is a meta-factory allowing to create classes that
-will fulfill the needs of your evolutionary algorithms. In effect, new
+will fulfill the needs of your evolutionary generators. In effect, new
 classes can be built from any imaginable type, from :class:`list` to
 :class:`set`, :class:`dict`, :class:`~deap.gp.PrimitiveTree` and more,
-providing the possibility to implement genetic algorithms, genetic
+providing the possibility to implement genetic generators, genetic
 programming, evolution strategies, particle swarm optimizers, and many more.
 """
 
