@@ -9,7 +9,7 @@ class TestUCB:
       options:
         n_initial_samples: 5
 
-    generator:
+    algorithm:
       name: upper_confidence_bound
       options:  
         n_steps: 10
@@ -24,7 +24,7 @@ class TestUCB:
         x2: [0, 1]
         x3: [0, 1]
       objectives: {y1: MINIMIZE}
-      constraints: null
+      constraints: {}
       linked_variables: {}
       constants: {a: dummy_constant}
 

@@ -124,11 +124,12 @@ class FunctionalGenerator(Generator):
     def __init__(self,
                  vocs: Dict,
                  function: Callable,
-                 options: Dict = None
+                 max_calls: int = 1,
+                 **kwargs
                  ):
         self.function = function
-        self.max_calls = options.pop('max_calls', 1)
-        self.options = options or {}
+        self.max_calls = max_calls
+        self.function_options = kwargs
         super(FunctionalGenerator, self).__init__(vocs)
 
     def _generate(self, data: pd.DataFrame) -> pd.DataFrame:
@@ -141,9 +142,9 @@ class FunctionalGenerator(Generator):
                 sig_pos_parameters += [name]
 
         if sig_pos_parameters == ['vocs']:
-            results = self.function(self.vocs, **self.options)
+            results = self.function(self.vocs, **self.function_options)
         elif sig_pos_parameters == ['vocs', 'data']:
-            results = self.function(self.vocs, data, **self.options)
+            results = self.function(self.vocs, data, **self.function_options)
         elif sig_pos_parameters == ['vocs', 'X', 'Y']:
             # convert pandas dataframe to numpy
             input_data = self.dataframe_to_numpy(data)
@@ -153,13 +154,14 @@ class FunctionalGenerator(Generator):
             if 'C' in input_data:
                 C = input_data['C']
                 try:
-                    results = self.function(self.vocs, X, Y, C=C, **self.options)
+                    results = self.function(self.vocs, X, Y, C=C,
+                                            **self.function_options)
                 except ValueError:
                     logger.error('callable function does not support constraints with '
                                  'keyword `C`')
 
             else:
-                results = self.function(self.vocs, X, Y, **self.options)
+                results = self.function(self.vocs, X, Y, **self.function_options)
         else:
             raise BadFunctionError('callable function input arguments not correct, '
                                    'must be one of the following forms:'

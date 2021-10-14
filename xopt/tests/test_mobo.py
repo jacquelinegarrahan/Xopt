@@ -8,21 +8,16 @@ from .test_functions import TNK
 class TestClassMOBO:
     VOCS = TNK.VOCS
     config = {'vocs': TNK.VOCS.copy()}
-    config['simulation'] = {'name': 'test_TNK',
-                            'evaluate': 'xopt.tests.test_functions.TNK.evaluate_TNK'}
-    config['xopt'] = {'output_path': '', 'verbose': False}
-    config['generator'] = {'name': 'mobo',
+    config['evaluate'] = {'name': 'test_TNK',
+                            'function': 'xopt.tests.test_functions.TNK.evaluate_TNK'}
+    config['xopt'] = {'output_path': ''}
+    config['algorithm'] = {'name': 'expected_hypervolume_improvement',
                            'options': {
                                'n_initial_samples': 1,
                                'n_steps': 1,
-                               'ref': [],
-                               'generator_options': {
-                                   'batch_size': 1,
-                                   'mc_samples': 4,
-                                   'num_restarts': 1,
-                                   'raw_samples': 4
-                               }
-                           }}
+                               'ref': None,
+                           }
+                           }
 
     def test_mobo_base(self):
         test_config = copy.deepcopy(self.config)
@@ -33,43 +28,45 @@ class TestClassMOBO:
             X.run()
 
         # try with reference point
-        test_config['generator']['options']['ref'] = [1.4, 1.4]
+        test_config['algorithm']['options'].update({'ref': [1.4, 1.4]})
         X = Xopt(test_config)
         X.run()
 
         # try with bad reference point
         with pytest.raises(ValueError):
-            test_config['generator']['options']['ref'] = [1.4, 1.4, 1.4]
+            test_config['algorithm']['options'].update({'ref': [1.4, 1.4, 1.4]})
             X = Xopt(test_config)
             X.run()
 
     def test_mobo_batch(self):
         test_config = copy.deepcopy(self.config)
-        test_config['generator']['options']['generator_options'] = {
-            'batch_size': 2
-        }
+        test_config['algorithm']['options'].update({'batch_size': 2})
 
         # try with reference point
-        test_config['generator']['options']['ref'] = [1.4, 1.4]
+        test_config['algorithm']['options'].update({'ref': [1.4, 1.4]})
         X = Xopt(test_config)
-        X.run()
+        print(X.run())
 
     def test_mobo_proximal(self):
         test_config = copy.deepcopy(self.config)
-        test_config['generator']['options']['generator_options'] = {
+        test_config['algorithm']['options'].update({
             'sigma': [1.0, 1.0],
-            'batch_size': 2
-        }
-        test_config['generator']['options']['ref'] = [1.4, 1.4]
+            'batch_size': 1})
+        test_config['algorithm']['options'].update({'ref': [1.4, 1.4]})
 
         # try with sigma matrix
         X = Xopt(test_config)
         X.run()
 
+        # try with batched
+        test_config['algorithm']['options'].update({'batch_size': 2})
+        with pytest.raises(ValueError):
+            X = Xopt(test_config)
+
     def test_mobo_unconstrained(self):
         test_config = copy.deepcopy(self.config)
         test_config['vocs']['constraints'] = {}
-        test_config['generator']['options']['ref'] = [1.4, 1.4]
+        test_config['algorithm']['options'].update({'ref': [1.4, 1.4]})
 
         # try with sigma matrix
         X = Xopt(test_config)

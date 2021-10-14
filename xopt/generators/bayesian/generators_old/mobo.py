@@ -118,11 +118,4 @@ class MOBOGenerator(BayesianGenerator):
 
         return acq_func
 
-    def get_corrected_ref(self, ref):
-        new_ref = ref.clone()
-        for j, name in zip(
-            range(len(self.vocs["objectives"])), self.vocs["objectives"].keys()
-        ):
-            if self.vocs["objectives"][name] == "MINIMIZE":
-                new_ref[j] = -new_ref[j]
-        return new_ref
+

@@ -3,6 +3,7 @@ import logging
 from concurrent.futures import Executor
 from typing import Dict, Callable, Union
 
+import numpy as np
 import pandas as pd
 
 from ..utils import check_dataframe, BadDataError
@@ -109,6 +110,11 @@ class Evaluator:
             r = future.result()
             if 'Exception' in r:
                 r.update({'status': 'error'})
+                # fill in objective/constraint columns with nans
+                keys = list(self.vocs['constraints'] or {}) + \
+                       list(self.vocs['objectives'])
+                r.update({key:np.NAN for key in keys})
+
             else:
                 r.update({'status': 'done'})
             results += [r]

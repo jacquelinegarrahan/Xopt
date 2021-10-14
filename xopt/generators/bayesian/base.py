@@ -5,18 +5,20 @@ from botorch.acquisition import AcquisitionFunction
 from botorch.acquisition.monte_carlo import qUpperConfidenceBound
 from botorch.optim.optimize import optimize_acqf
 
-from ..generator import Generator
+from ..generator import ContinuousGenerator
 from .models.models import create_model
 from ...vocs_tools import get_bounds
 from typing import Dict, Callable
 import pandas as pd
+from ...utils import check_and_fill_defaults
+from ...tools import get_function_defaults
 
 import logging
 
 logger = logging.getLogger(__name__)
 
 
-class BayesianGenerator(Generator, ABC):
+class BayesianGenerator(ContinuousGenerator, ABC):
     def __init__(self,
                  vocs: Dict,
                  acqisition_function: Callable,
@@ -25,15 +27,18 @@ class BayesianGenerator(Generator, ABC):
                  ):
         """
         General Bayesian optimization generator
-        NOTE: we assume maximization for the acquisition function
+        NOTE: we assume maximization for all acquisition functions
         """
         super(BayesianGenerator, self).__init__(vocs)
         self.model = None
         self.acqisition_function = acqisition_function
         self.acqisition_function_options = acquisition_options or {}
-        self.optimization_options = {'num_restarts': 20,
-                                     'raw_samples': 200}
-        self.optimization_options.update(optimize_options)
+
+        # get optimization kwargs defaults
+        optimization_defaults = get_function_defaults(optimize_acqf)
+
+        self.optimization_options = check_and_fill_defaults(optimize_options,
+                                                            optimization_defaults)
 
         self.tkwargs = {"dtype": torch.double, "device": torch.device("cpu")}
 
@@ -49,9 +54,7 @@ class BayesianGenerator(Generator, ABC):
             else:
                 logger.warning("gpu requested but not found, using cpu")
 
-        self.n_calls = 0
-
-    def generate(self, data) -> pd.DataFrame:
+    def _generate(self, data) -> pd.DataFrame:
         """
         Generate datapoints for sampling using an acquisition function and a model
         """
@@ -83,24 +86,13 @@ class BayesianGenerator(Generator, ABC):
 
         # optimize
         candidates, _ = optimize_acqf(
-            acq_function=acq_func, bounds=bounds, **self.optimization_options
+            acq_function=acq_func,
+            bounds=bounds,
+            q=self._n_samples,
+            num_restarts=self.optimization_options.get('num_restarts', 20),
+            raw_samples=self.optimization_options.get('raw_samples', 512),
+            **self.optimization_options
         )
 
         candidates = candidates.detach().cpu().numpy()
-        self.n_calls += 1
         return self.numpy_to_dataframe(candidates)
-
-
-class UpperConfidenceBound(BayesianGenerator):
-    def __init__(self, vocs, n_steps=1, q=1, beta=2.0, **kwargs):
-        acquisition_options = {'beta': beta}
-        optimize_options = {'q': q,
-                            **kwargs}
-        self.n_steps = n_steps
-        super(UpperConfidenceBound, self).__init__(vocs,
-                                                   qUpperConfidenceBound,
-                                                   acquisition_options,
-                                                   optimize_options)
-
-    def is_terminated(self):
-        return self.n_calls >= self.n_steps

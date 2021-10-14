@@ -11,8 +11,8 @@ nav:
       - examples/bayesian_exploration.ipynb
     - API:
       - Xopt: api/xopt.md
-      - Bayesian algorithms: api/generators/bayesian.md
-      - Genetic algorithms: api/generators/genetic.md
+      - Bayesian algorithms: api/generators_old/bayesian.md
+      - Genetic algorithms: api/generators_old/genetic.md
 
 theme:
   icon:
