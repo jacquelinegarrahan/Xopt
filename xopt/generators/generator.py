@@ -2,8 +2,11 @@ import logging
 from abc import ABC, abstractmethod
 from inspect import signature
 from typing import Callable, Dict
+
+import numpy as np
+
 from .utils import transform_data
-from ..utils import check_dataframe, BadFunctionError
+from ..utils import check_dataframe, BadFunctionError, BadDataError
 import pandas as pd
 
 logger = logging.getLogger(__name__)
@@ -12,9 +15,38 @@ logger = logging.getLogger(__name__)
 class Generator(ABC):
     def __init__(self, vocs: Dict):
         self.vocs = vocs
+        self._n_samples = -1
+        self.n_calls = 0
+
+    def generate(self, data) -> pd.DataFrame:
+        """
+        Generate points for observation based on generator state
+        Calls protected _generator(data) method and checks output before returning
+        results, if n_samples is > 0 check to make sure the function returns the
+        correct number of samples
+        """
+        samples = self._generate(data)
+
+        # run checks
+        if isinstance(samples, pd.DataFrame):
+            # check to make sure output has correct values according to vocs
+            if list(samples.keys()) != list(self.vocs['variables']):
+                raise BadDataError('generator function does not have the correct '
+                                   'columns')
+
+            # if n_samples is greater than zero make sure that the generate function
+            # returns the correct number of samples
+            if self._n_samples > 0 and (len(samples) != self._n_samples):
+                raise BadDataError('generator function did not return the requested '
+                                   'number of samples')
+        else:
+            raise TypeError('generator function needs to return a dataframe object')
+
+        self.n_calls += 1
+        return samples
 
     @abstractmethod
-    def generate(self, data) -> pd.DataFrame:
+    def _generate(self, data) -> pd.DataFrame:
         """
         Generate points for observation based on generator state
 
@@ -69,6 +101,14 @@ class Generator(ABC):
         return pd.DataFrame(X, columns=self.vocs['variables'])
 
 
+class ContinuousGenerator(Generator, ABC):
+    def __init__(self, vocs: Dict):
+        super(ContinuousGenerator, self).__init__(vocs)
+
+    def set_n_samples(self, n_samples):
+        self._n_samples = n_samples
+
+
 class FunctionalGenerator(Generator):
     """
     Generator class that takes in an arbitrary function where we will
@@ -88,12 +128,10 @@ class FunctionalGenerator(Generator):
                  ):
         self.function = function
         self.max_calls = options.pop('max_calls', 1)
-        self.n_calls = 0
         self.options = options or {}
         super(FunctionalGenerator, self).__init__(vocs)
 
-    def generate(self, data: pd.DataFrame) -> pd.DataFrame:
-
+    def _generate(self, data: pd.DataFrame) -> pd.DataFrame:
         # check signature of callable to pass callable correct data
         sig = signature(self.function)
         sig_pos_parameters = []
@@ -131,13 +169,12 @@ class FunctionalGenerator(Generator):
                                    '- f(vocs: Dict, X: np.ndarray, Y: np.ndarray, '
                                    '**kwargs) -> np.ndarray\n'
                                    'NOTE: typing is NOT enforced')
-
+        results = np.atleast_2d(results)
         if results.shape[-1] != len(self.vocs['variables']):
             raise BadFunctionError('callable function does not return the correct '
                                    f'dimensional array, returned {results.shape} but '
                                    f'needs to match # of variables in vocs')
 
-        self.n_calls += 1
         return pd.DataFrame(results, columns=self.vocs['variables'])
 
     def is_terminated(self):

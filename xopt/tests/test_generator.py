@@ -1,48 +1,53 @@
+from ..generators.generator import FunctionalGenerator, BadFunctionError
+import numpy as np
+import pandas as pd
 import pytest
-from xopt.generators.bayesian.generators.generator import BayesianGenerator
-from botorch.acquisition.analytic import UpperConfidenceBound
-from botorch.exceptions.errors import BotorchError
-import torch
-from botorch.models import SingleTaskGP
-from .test_functions import TNK
 
 
-def _good_test(model, beta):
-    return UpperConfidenceBound(model, beta)
+class TestGeneratorBase:
+    vocs = {'variables':
+                {'x1': [0, 1],
+                 'x2': [0, 1]},
+            'objectives':
+                {'y1': 'MINIMIZE'}}
 
+    def test_generator_base(self):
+        def a(vocs):
+            return np.random.rand(5, 2)
 
-def _bad_test(model):
-    return None
+        def b(vocs, x=None):
+            return np.random.rand(5, 2)
 
+        def c(vocs, data):
+            return np.random.rand(5, 2)
 
-class TestGenerator:
-    def test_generator(self):
-        vocs = TNK.VOCS
+        def d(vocs, data, x=None):
+            return np.random.rand(5, 2)
 
-        train_x = torch.rand(2, len(vocs['variables']))
-        train_y = torch.ones(2, len(vocs['objectives']) +
-                                len(vocs['constraints']))
+        def e(vocs, X, Y):
+            return np.random.rand(5, 2)
 
-        model_1d = SingleTaskGP(train_x, train_y[:, 0].reshape(-1, 1))
-        model_md = SingleTaskGP(train_x, train_y)
+        def f(vocs, X, Y, x=None):
+            return np.random.rand(5, 2)
 
-        beta = 0.01
-        ucb = UpperConfidenceBound(model_1d, beta)
-        test_x = torch.zeros(1, len(vocs['variables']))
-        test_ucb_value = ucb(test_x)
+        def g(v, X, Y):
+            return np.random.rand(5, 2)
 
-        gen = BayesianGenerator(vocs, UpperConfidenceBound,
-                                acq_options={'beta': beta})
-        assert gen.acq_func(model_1d, **gen.acq_options)(test_x) == test_ucb_value
+        def h(vocs, X, Y, Z):
+            return np.random.rand(5, 2)
 
-        gen2 = BayesianGenerator(vocs, _good_test,
-                                 acq_options={'beta': beta})
+        def l(vocs, X, Y):
+            return np.random.rand(5, 3)
 
-        # test bad model
-        with pytest.raises(BotorchError):
-            gen2.generate(model_1d)
+        data = pd.DataFrame(np.random.rand(5, 3),
+                            columns=list(self.vocs['variables']) +
+                                    list(self.vocs['objectives']))
 
-        # test bad acq function
-        with pytest.raises(RuntimeError):
-            gen3 = BayesianGenerator(vocs, _bad_test)
-            gen3.generate(model_md)
+        for ele in [a, b, c, d, e, f]:
+            alg = FunctionalGenerator(self.vocs, ele)
+            alg.generate(data)
+
+        for ele in [g, h, l]:
+            with pytest.raises(BadFunctionError):
+                alg = FunctionalGenerator(self.vocs, ele)
+                alg.generate(data)

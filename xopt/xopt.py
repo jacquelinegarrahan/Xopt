@@ -40,7 +40,7 @@ class Xopt:
         self._configured_dict = None
 
         self.routine = None
-        self.algorithm = None
+        self.generator = None
         self.evaluator = None
         self.vocs = None
 
@@ -83,17 +83,17 @@ class Xopt:
         self.config = expand_paths(self.config, ensure_exists=True)
 
         self.configure_vocs()
-        self.configure_algorithm()
+        self.configure_generator()
         self.configure_evaluate()
-        self.configure_routine()
+        self.configure_generator()
 
         self._configured_dict = self.config
 
     # --------------------------
     # Configures
-    def configure_routine(self):
-        """ configure routine """
-        assert self.algorithm and self.evaluator, 'generator and evaluator not ' \
+    def configure_algorithm(self):
+        """ configure algorithm """
+        assert self.generator and self.evaluator, 'generator and evaluator not ' \
                                                   'initialized yet!'
         rtype = self.config['xopt'].get('routine', 'batched')
         routine_options = self.config['xopt'].get('options', {})
@@ -105,13 +105,13 @@ class Xopt:
                                                            routine_default_options)
             self.routine = KNOWN_ROUTINES[rtype](self.config,
                                                  self.evaluator,
-                                                 self.algorithm,
+                                                 self.generator,
                                                  **self.config['xopt']['options']
                                                  )
         else:
             ValueError('must use a named routine')
 
-    def configure_algorithm(self):
+    def configure_generator(self):
         """ configure generator """
         # get generator via name or function
         alg_name = self.config['generator'].get('name', None)

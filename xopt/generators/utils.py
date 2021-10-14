@@ -20,30 +20,34 @@ def transform_data(dataframe: pd.DataFrame,
         new_df[name + '_t'] = \
             (new_df[name] - bounds[0, ii]) / (bounds[1, ii] - bounds[0, ii])
 
-    # flip sign of objectives 'MAXIMIZE'
-    for name in vocs['objectives']:
-        if vocs['objectives'][name] == 'MAXIMIZE':
-            new_df[name + '_t'] = -new_df[name]
-        else:
-            new_df[name + '_t'] = new_df[name]
-
-    # modify constraint values
-    if vocs['constraints'] is not None:
-        for name in vocs['constraints']:
-            if vocs['constraints'][name][0] == 'GREATER_THAN':
-                new_df[name + '_t'] = vocs['constraints'][name][1] - new_df[name]
-
-            elif vocs['constraints'][name][0] == 'LESS_THAN':
-                new_df[name + '_t'] = -(vocs['constraints'][name][1] - new_df[name])
-
+    # if there is an error with measurements the dataframe does not have value the
+    # constraint or objective keys
+    if not set(list(vocs['objectives']) + list(vocs['constraints'])).issubset(set(
+            new_df.keys())):
+        # flip sign of objectives 'MAXIMIZE'
+        for name in vocs['objectives']:
+            if vocs['objectives'][name] == 'MAXIMIZE':
+                new_df[name + '_t'] = -new_df[name]
             else:
-                raise ValueError(f"{vocs['constraints'][name][0]} not accepted")
+                new_df[name + '_t'] = new_df[name]
 
-        # add feasibility metric
-        ndata = new_df[[ele + '_t' for ele in vocs['constraints']]].to_numpy()
-        fdata = ndata <= 0
-        new_df[[ele + '_f' for ele in vocs['constraints']]] = fdata
-        new_df['feas'] = np.all(fdata, axis=1)
+        # modify constraint values
+        if vocs['constraints'] is not None:
+            for name in vocs['constraints']:
+                if vocs['constraints'][name][0] == 'GREATER_THAN':
+                    new_df[name + '_t'] = vocs['constraints'][name][1] - new_df[name]
+
+                elif vocs['constraints'][name][0] == 'LESS_THAN':
+                    new_df[name + '_t'] = -(vocs['constraints'][name][1] - new_df[name])
+
+                else:
+                    raise ValueError(f"{vocs['constraints'][name][0]} not accepted")
+
+            # add feasibility metric
+            ndata = new_df[[ele + '_t' for ele in vocs['constraints']]].to_numpy()
+            fdata = ndata <= 0
+            new_df[[ele + '_f' for ele in vocs['constraints']]] = fdata
+            new_df['feas'] = np.all(fdata, axis=1)
 
     return new_df
 

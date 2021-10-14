@@ -1,11 +1,11 @@
 import concurrent.futures
 import logging
 from concurrent.futures import Executor
-from typing import Dict, Callable
+from typing import Dict, Callable, Union
 
 import pandas as pd
 
-from ..utils import check_dataframe
+from ..utils import check_dataframe, BadDataError
 
 logger = logging.getLogger(__name__)
 
@@ -56,23 +56,28 @@ class Evaluator:
         self.executor = executor
         self.futures = {}
 
-    def submit_samples(self, samples):
+    def submit_samples(self, samples: Union[pd.DataFrame, pd.Series]):
         """
         Submit samples to executor
 
         Parameters
         ----------
-        samples : np.ndarray
+        samples : pd.DataFrame
             Samples to be evaluated, should be 2D and the last axis should have the
             same length of len(vocs['variables'])
         """
-        self.futures = {}
-
-        assert len(samples.shape) == 2
+        #assert len(samples.shape) == 2
         assert samples.shape[-1] == len(self.vocs['variables'])
 
-        for idx, sample in samples.iterrows():
-            setting = sample.copy()
+        settings = []
+        if isinstance(samples, pd.Series):
+            settings += [samples.to_dict()]
+        elif isinstance(samples, pd.DataFrame):
+            for idx, sample in samples.iterrows():
+                settings += [sample.to_dict()]
+
+        for ele in settings:
+            setting = ele.copy()
             if self.vocs['constants']:
                 setting.update(self.vocs['constants'])
 
@@ -80,9 +85,15 @@ class Evaluator:
                 {
                     self.executor.submit(
                         sampler_evaluate, setting, self.f, **self.evaluate_options
-                    ): sample
+                    ): ele
                 }
             )
+
+    def get_futures(self, return_when):
+        done, not_done = concurrent.futures.wait(
+            self.futures, timeout=0.1, return_when=return_when
+        )
+        return done, not_done
 
     def collect_results(self,
                         return_when=concurrent.futures.ALL_COMPLETED):
@@ -90,9 +101,7 @@ class Evaluator:
         Get all of the results from the futures
         """
 
-        done, not_done = concurrent.futures.wait(
-            self.futures, timeout=0.1, return_when=return_when
-        )
+        done, not_done = self.get_futures(return_when)
 
         # from the finished futures collect the data into a pandas dataframe
         results = []
@@ -104,14 +113,25 @@ class Evaluator:
                 r.update({'status': 'done'})
             results += [r]
 
-        # create dataframe
-        data = pd.DataFrame(results)
+        for ele in done:
+            del self.futures[ele]
 
-        # check to make sure at least one valid measurement has been made, else raise
-        # an exception
-        check_dataframe(data, self.vocs)
+        if len(results):
+            # create dataframe
+            data = pd.DataFrame(results)
 
-        return data
+            # check to make sure at least one valid measurement has been made,
+            # else raise an exception
+            valid_flag = True
+            try:
+                check_dataframe(data, self.vocs)
+            except BadDataError:
+                valid_flag = False
+
+            return data, valid_flag
+
+        else:
+            return None, None
 
 
 

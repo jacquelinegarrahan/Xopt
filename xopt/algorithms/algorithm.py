@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
-from ..generators.generator import Generator
+from ..generators.generator import Generator, ContinuousGenerator
 from ..evaluators.evaluator import Evaluator
-from typing import Dict
+from typing import Dict, Union
 from copy import deepcopy
 import os
 import json
@@ -15,7 +15,7 @@ class Algorithm(ABC):
     def __init__(self,
                  config: Dict,
                  evaluator: Evaluator,
-                 generator: Generator,
+                 generator: Union[Generator, ContinuousGenerator],
                  output_path: str = ''):
         self.config = config
         self.vocs = config['vocs']
