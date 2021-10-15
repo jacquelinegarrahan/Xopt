@@ -20,13 +20,10 @@ logger = logging.getLogger(__name__)
 
 
 def get_corrected_ref(vocs, ref):
-    new_ref = ref.clone()
-    for j, name in zip(
-            range(len(vocs["objectives"])), vocs["objectives"].keys()
-    ):
-        if vocs["objectives"][name] == "MINIMIZE":
-            new_ref[j] = -new_ref[j]
-    return new_ref
+    for key in vocs['objectives']:
+        if vocs["objectives"][key] == "MINIMIZE":
+            ref[key] = -ref[key]
+    return ref
 
 
 def create_mobo_acqf(model: Model,
@@ -34,6 +31,7 @@ def create_mobo_acqf(model: Model,
                      n_objectives: int,
                      n_constraints: int,
                      sigma: torch.Tensor = None,
+                     sampler=None
                      ) -> AcquisitionFunction:
     train_outputs = model.train_targets.T
     train_y = train_outputs[:, : n_objectives]
@@ -70,6 +68,7 @@ def create_mobo_acqf(model: Model,
             outcomes=list(range(n_objectives))
         ),
         constraints=constraint_functions,
+        sampler=sampler
     )
 
     # add in proximal biasing

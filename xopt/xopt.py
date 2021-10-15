@@ -88,7 +88,7 @@ class Xopt:
         self.configure_evaluate()
         self.configure_algorithm()
 
-        self._configured_dict = self.config
+        self._configured_dict = deepcopy(self.config)
 
     # --------------------------
     # Configures
@@ -214,11 +214,11 @@ class Xopt:
 
     @property
     def algorithm_config(self):
-        return self.config['generator']
+        return self.config['algorithm']
 
     # --------------------------
     # Run
-    def run(self, executor=None):
+    def run(self):
         # check to make sure that configured_dict is equal to current config,
         # otherwise re-run configure_all
         if self._configured_dict != self.config:

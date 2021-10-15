@@ -43,6 +43,7 @@ class Algorithm(ABC):
         if self.data is not None:
             info.update({'results': self.data.to_json()})
 
+        logger.debug('saving data to file')
         with open(os.path.join(self.output_path, 'results.json'), 'w') as outfile:
             json.dump(info, outfile)
 

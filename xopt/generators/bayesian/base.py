@@ -1,5 +1,6 @@
 from abc import ABC
 
+import numpy as np
 import torch
 from botorch.acquisition import AcquisitionFunction
 from botorch.acquisition.monte_carlo import qUpperConfidenceBound
@@ -10,6 +11,7 @@ from .models.models import create_model
 from ...vocs_tools import get_bounds
 from typing import Dict, Callable
 import pandas as pd
+from ..utils import untransform_x
 from ...utils import check_and_fill_defaults
 from ...tools import get_function_defaults
 
@@ -58,8 +60,8 @@ class BayesianGenerator(ContinuousGenerator, ABC):
         """
         Generate datapoints for sampling using an acquisition function and a model
         """
-
         # get valid data from dataframe and convert to torch tensors
+        # + do normalization required by bototrch models
         valid_df = data.loc[data['status'] == 'done']
         train_data = self.dataframe_to_numpy(valid_df)
         for name, val in train_data.items():
@@ -71,8 +73,9 @@ class BayesianGenerator(ContinuousGenerator, ABC):
         # create and train model
         self.model = create_model(train_data, vocs=self.vocs)
 
-        # optimize the acquisition function
-        bounds = torch.tensor(get_bounds(self.vocs), **self.tkwargs)
+        # optimize the acquisition function in normalized space
+        bounds = torch.zeros(2, len(self.vocs['variables']), **self.tkwargs)
+        bounds[1, :] = 1.0
 
         # set up acquisition function object
         acq_func = self.acqisition_function(self.model,
@@ -95,4 +98,4 @@ class BayesianGenerator(ContinuousGenerator, ABC):
         )
 
         candidates = candidates.detach().cpu().numpy()
-        return self.numpy_to_dataframe(candidates)
+        return untransform_x(self.numpy_to_dataframe(candidates), self.vocs)

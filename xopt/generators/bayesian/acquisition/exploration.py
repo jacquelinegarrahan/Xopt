@@ -1,5 +1,6 @@
 import torch
-from botorch.acquisition import MCAcquisitionFunction, AnalyticAcquisitionFunction
+from botorch.acquisition import MCAcquisitionFunction, AnalyticAcquisitionFunction, \
+    GenericMCObjective
 from botorch.acquisition.analytic import _construct_dist
 from botorch.utils.objective import apply_constraints_nonnegative_soft
 from botorch.utils.transforms import (
@@ -8,6 +9,60 @@ from botorch.utils.transforms import (
     convert_to_target_pre_hook,
 )
 from botorch.models.gpytorch import GPyTorchModel, ModelListGPyTorchModel
+from functools import partial
+from typing import Dict
+from ..acquisition.proximal import ProximalAcquisitionFunction
+
+
+def create_bayes_exp_acq(model,
+                         n_variables: int,
+                         n_constraints: int,
+                         sigma: torch.Tensor = None,
+                         sampler=None,
+                         q: int = 1):
+    """
+    Optimize Bayesian Exploration
+
+    model should be a SingleTaskGP model trained such that the output has a shape
+    n x m + 1 where the first element is the target function for exploration and
+    m is the number of constraints
+
+    """
+
+    # serialized Bayesian Exploration
+    #if q == 1:
+    #    if sigma.shape[0] != n_variables:
+    #        raise ValueError('proximal sigma does not match vocs')
+
+    #    constraint_dict = {}
+    #    for i in range(1, n_constraints + 1):
+    #        constraint_dict[i] = [None, 0.0]
+
+    #    constraint_dict = constraint_dict if len(constraint_dict) else None
+    #    acq_func = BayesianExploration(model, 0, constraint_dict, sigma)
+
+    # batched Bayesian Exploration
+    #else:
+    mc_obj = GenericMCObjective(lambda Z, X: Z[..., 0])
+
+    # define constraint functions - note issues with lambda implementation
+    # https://tinyurl.com/j8wmckd3
+    def constr_func(Z, index=-1):
+        return Z[..., index]
+
+    constraint_functions = []
+    for i in range(1, n_constraints + 1):
+        constraint_functions += [partial(constr_func, index=-i)]
+
+    acq_func = qBayesianExploration(
+        model, sampler, mc_obj, constraints=constraint_functions
+    )
+
+    # add in proximal biasing
+    if sigma is not None:
+        acq_func = ProximalAcquisitionFunction(acq_func, sigma)
+
+    return acq_func
 
 
 class BayesianExploration(AnalyticAcquisitionFunction):
@@ -56,7 +111,7 @@ class BayesianExploration(AnalyticAcquisitionFunction):
                     "matrix "
                 )
         else:
-            self.sigma = sigma
+            self.sigma = torch.diag(sigma)
 
     @t_batch_mode_transform(expected_q=1)
     def forward(self, X):
@@ -140,7 +195,7 @@ class BayesianExploration(AnalyticAcquisitionFunction):
         self.register_buffer("con_lower", torch.tensor(con_lower, dtype=torch.float))
         self.register_buffer("con_upper", torch.tensor(con_upper, dtype=torch.float))
 
-    def _compute_prob_feas(self, X, means, sigmas):
+    def _compute_prob_feas(self, X, means, sigmas) -> torch.Tensor:
         r"""Compute feasibility probability for each batch of X.
         Args:
             X: A `(b) x 1 x d`-dim Tensor of `(b)` t-batches of `d`-dim design
@@ -179,7 +234,7 @@ class BayesianExploration(AnalyticAcquisitionFunction):
 
 class qBayesianExploration(MCAcquisitionFunction):
     def __init__(
-        self, model, sampler=None, objective=None, X_pending=None, constraints=None
+            self, model, sampler=None, objective=None, X_pending=None, constraints=None
     ):
         super(qBayesianExploration, self).__init__(model, sampler, objective, X_pending)
         self.constraints = constraints

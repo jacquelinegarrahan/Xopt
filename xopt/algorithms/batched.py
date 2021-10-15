@@ -23,6 +23,7 @@ class Batched(Algorithm):
         rs = RandomSample(self.vocs, self.n_inital_samples)
 
         # generate a set of samples that has at least one valid sample
+        logger.info('Generating and submitting initial samples')
         while True:
             samples = rs.generate(self.data)
             self.evaluator.submit_samples(samples)
@@ -36,10 +37,13 @@ class Batched(Algorithm):
 
         # do optimization loop
         while not self.generator.is_terminated():
+            logger.info('generating samples')
             samples = self.generator.generate(self.data)
+            logger.debug(f'generated {len(samples)} samples')
             self.evaluator.submit_samples(samples)
 
             # gather results when all done
+            logger.info('collecting results')
             results, valid = self.evaluator.collect_results()
             # add transformed results to dataframe
             results = self.generator.transform_data(results)

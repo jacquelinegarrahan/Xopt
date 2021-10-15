@@ -38,14 +38,13 @@ def create_model(train_data, vocs, custom_model=None, **kwargs):
                 train_x, train_outputs, input_normalize, output_standardize
             )
         else:
-            output_standardize = Standardize(m=train_outputs.shape[-1])
+            output_standardize = None#Standardize(m=train_outputs.shape[-1])
             model = SingleTaskGP(
                 train_x,
                 train_outputs,
-                input_transform=input_normalize,
+                input_transform=None,
                 outcome_transform=output_standardize,
             )
-
             mll = ExactMarginalLogLikelihood(model.likelihood, model)
             fit_gpytorch_model(mll)
 
