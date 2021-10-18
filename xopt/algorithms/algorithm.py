@@ -14,11 +14,12 @@ logger = logging.getLogger(__name__)
 class Algorithm(ABC):
     def __init__(self,
                  config: Dict,
+                 vocs: Dict,
                  evaluator: Evaluator,
                  generator: Union[Generator, ContinuousGenerator],
                  output_path: str = ''):
         self.config = config
-        self.vocs = config['vocs']
+        self.vocs = vocs
         self.evaluator = evaluator
         self.generator = generator
         self.output_path = output_path
@@ -46,4 +47,5 @@ class Algorithm(ABC):
         logger.debug('saving data to file')
         with open(os.path.join(self.output_path, 'results.json'), 'w') as outfile:
             json.dump(info, outfile)
+
 

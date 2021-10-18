@@ -1,4 +1,5 @@
-from xopt.tools import full_path, new_date_filename, random_settings, DummyExecutor, NpEncoder
+from xopt.tools import full_path, new_date_filename, random_settings, NpEncoder
+from xopt.evaluators import DummyExecutor
 from xopt import __version__
 from deap.base import Toolbox
 import json

@@ -16,12 +16,14 @@ logger = logging.getLogger(__name__)
 class Continuous(Algorithm):
     def __init__(self,
                  config: Dict,
+                 vocs: Dict,
                  evaluator: Evaluator,
                  generator: Union[Generator, ContinuousGenerator],
                  n_processes=1,
                  output_path='.'):
         self.n_inital_samples = n_processes
-        super(Continuous, self).__init__(config, evaluator, generator, output_path)
+        super(Continuous, self).__init__(config, vocs, evaluator, generator,
+                                         output_path)
 
     def run(self):
         """

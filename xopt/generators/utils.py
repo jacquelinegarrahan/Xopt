@@ -68,6 +68,6 @@ def transform_data(dataframe: pd.DataFrame,
         ndata = new_df[[ele + '_t' for ele in vocs['constraints']]].to_numpy()
         fdata = ndata <= 0
         new_df[[ele + '_f' for ele in vocs['constraints']]] = fdata
-        new_df['feas'] = np.all(fdata, axis=1)
+        new_df['feasibility'] = np.all(fdata, axis=1)
 
     return new_df

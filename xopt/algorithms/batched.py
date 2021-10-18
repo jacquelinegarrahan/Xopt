@@ -10,10 +10,10 @@ logger = logging.getLogger(__name__)
 
 
 class Batched(Algorithm):
-    def __init__(self, config, evaluator, generator,
+    def __init__(self, config, vocs, evaluator, generator,
                  n_initial_samples=1, output_path='.'):
         self.n_inital_samples = n_initial_samples
-        super(Batched, self).__init__(config, evaluator, generator, output_path)
+        super(Batched, self).__init__(config, vocs, evaluator, generator, output_path)
 
     def run(self):
         """

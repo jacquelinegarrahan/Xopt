@@ -7,7 +7,8 @@ Continuous NSGA-II, NSGA-III
 from xopt import creator, vocs_tools, fitness_with_constraints
 
 from xopt import creator, vocs_tools, fitness_with_constraints
-from xopt.tools import full_path, random_settings_arrays, DummyExecutor, load_config, NpEncoder
+from xopt.tools import full_path, random_settings_arrays, load_config, NpEncoder
+from xopt.evaluators import DummyExecutor
 from xopt import __version__
 from deap import algorithms, base, tools
 

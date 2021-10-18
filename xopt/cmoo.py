@@ -2,8 +2,7 @@ from packaging import version
 import pymoo
 
 from . import vocs_tools
-from .tools import DummyExecutor
-
+from .evaluators import DummyExecutor
 
 DEPRECATED_PYMOO = True
 if version.parse(pymoo.__version__) >= version.parse("0.5.0"):

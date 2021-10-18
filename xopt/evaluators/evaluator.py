@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 
 from ..utils import check_dataframe, BadDataError
-
+from . import DummyExecutor
 logger = logging.getLogger(__name__)
 
 
@@ -48,13 +48,13 @@ class Evaluator:
     def __init__(self,
                  vocs: Dict,
                  f: Callable,
-                 executor: Executor,
+                 executor: Executor = None,
                  evaluate_options: Dict = None
                  ):
         self.f = f
         self.vocs = vocs
         self.evaluate_options = evaluate_options or {}
-        self.executor = executor
+        self.executor = executor or DummyExecutor()
         self.futures = {}
 
     def submit_samples(self, samples: Union[pd.DataFrame, pd.Series]):

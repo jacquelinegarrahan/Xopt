@@ -2,7 +2,7 @@ import pandas as pd
 
 from ..evaluators.evaluator import Evaluator
 from .test_functions.quad_3d import VOCS, evaluate
-from ..tools import DummyExecutor
+from ..evaluators import DummyExecutor
 import numpy as np
 
 
@@ -10,7 +10,6 @@ class TestEvaluator:
     def test_evaluator(self):
         E = Evaluator(VOCS,
                       evaluate,
-                      DummyExecutor(),
                       )
 
         samples = np.random.rand(10, 3)

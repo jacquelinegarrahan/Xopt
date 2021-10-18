@@ -8,8 +8,9 @@ from xopt.legacy import reformat_config
 from xopt.tools import expand_paths, load_config, get_function, isotime
 from .configure import ALL_DEFAULTS, VOCS_DEFAULTS, EVALUATE_DEFAULTS, \
     ALGORITHM_DEFAULTS
-from .tools import DummyExecutor, get_n_required_fuction_arguments, \
+from .tools import get_n_required_fuction_arguments, \
     get_function_defaults
+from .evaluators import DummyExecutor
 from .utils import check_and_fill_defaults
 
 logger = logging.getLogger(__name__)
@@ -161,6 +162,7 @@ class Xopt:
                             algorithm_default_options.keys()}
         self.algorithm = KNOWN_ALGORITHMS[algorithm_type](
             self.config,
+            self.config['vocs'],
             self.evaluator,
             self.generator,
             **algorithm_kwargs)
@@ -182,7 +184,7 @@ class Xopt:
             evaluate_config['options'] or {},
             evaluate_function_defaults)
 
-        executor = evaluate_config['executor'] or DummyExecutor()
+        executor = evaluate_config['executor']
         evaluate_options = evaluate_config['options']
 
         # check evaluate_function

@@ -4,7 +4,7 @@ Tools to configure an xopt run
 """
 from copy import deepcopy
 
-from .tools import DummyExecutor
+from .evaluators import DummyExecutor
 import logging
 from typing import Dict
 
