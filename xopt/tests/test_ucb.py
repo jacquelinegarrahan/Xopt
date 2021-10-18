@@ -6,13 +6,12 @@ class TestUCB:
     YAML = """
     xopt:
       output_path: ''
-      options:
-        n_initial_samples: 5
 
     algorithm:
       name: upper_confidence_bound
       options:  
         n_steps: 10
+        n_initial_samples: 5
 
     evaluate: 
       name: quad_3d

@@ -1,4 +1,7 @@
 from abc import ABC, abstractmethod
+
+import pandas as pd
+
 from ..generators.generator import Generator, ContinuousGenerator
 from ..evaluators.evaluator import Evaluator
 from typing import Dict, Union
@@ -17,14 +20,18 @@ class Algorithm(ABC):
                  vocs: Dict,
                  evaluator: Evaluator,
                  generator: Union[Generator, ContinuousGenerator],
-                 output_path: str = ''):
+                 output_path: str = '',
+                 restart_file: str = None):
         self.config = config
         self.vocs = vocs
         self.evaluator = evaluator
         self.generator = generator
         self.output_path = output_path
 
-        self.data = None
+        if restart_file is not None:
+            self.load_data(restart_file)
+        else:
+            self.data = None
 
     @abstractmethod
     def run(self):
@@ -48,4 +55,12 @@ class Algorithm(ABC):
         with open(os.path.join(self.output_path, 'results.json'), 'w') as outfile:
             json.dump(info, outfile)
 
+    def load_data(self, fname):
+        """
+        load data from file, assumes a data file in json format, looks for `results` key
+        """
+        with open(fname, 'r') as infile:
+            data_dict = json.load(infile)
+
+        self.data = pd.DataFrame(data_dict['results'])
 

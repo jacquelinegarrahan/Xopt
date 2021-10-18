@@ -33,8 +33,8 @@ class BayesianGenerator(ContinuousGenerator, ABC):
         """
         super(BayesianGenerator, self).__init__(vocs)
         self.model = None
-        self.acqisition_function = acqisition_function
-        self.acqisition_function_options = acquisition_options or {}
+        self.acquisition_function = acqisition_function
+        self.acquisition_function_options = acquisition_options or {}
 
         # get optimization kwargs defaults
         optimization_defaults = get_function_defaults(optimize_acqf)
@@ -63,6 +63,11 @@ class BayesianGenerator(ContinuousGenerator, ABC):
         # get valid data from dataframe and convert to torch tensors
         # + do normalization required by bototrch models
         valid_df = data.loc[data['status'] == 'done']
+
+        #check to make sure there is some data
+        if len(valid_df) == 0:
+            raise RuntimeError('no data to create GP model')
+
         train_data = self.dataframe_to_numpy(valid_df)
         for name, val in train_data.items():
             train_data[name] = torch.tensor(train_data[name], **self.tkwargs)
@@ -78,8 +83,8 @@ class BayesianGenerator(ContinuousGenerator, ABC):
         bounds[1, :] = 1.0
 
         # set up acquisition function object
-        acq_func = self.acqisition_function(self.model,
-                                            **self.acqisition_function_options)
+        acq_func = self.acquisition_function(self.model,
+                                             **self.acquisition_function_options)
 
         if not isinstance(acq_func, AcquisitionFunction):
             raise RuntimeError(

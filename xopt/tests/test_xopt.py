@@ -5,6 +5,39 @@ import pytest
 
 
 class TestXoptConfig:
+    YAML = """
+    xopt:
+      output_path: ''        
+
+    algorithm:
+      name: upper_confidence_bound
+      options:  
+        n_steps: 10
+        n_initial_samples: 5
+
+    evaluate: 
+      name: quad_3d
+      function: xopt.tests.test_functions.quad_3d.evaluate
+
+    vocs:
+      variables:
+        x1: [0, 1]
+        x2: [0, 1]
+        x3: [0, 1]
+      objectives: {y1: MINIMIZE}
+      constraints: {}
+      linked_variables: {}
+      constants: {a: dummy_constant}
+
+    """
+
+    def test_read_config(self):
+        # use hard coded YAML file above to test
+        X = Xopt(self.YAML)
+        X.configure_all()
+        assert X.algorithm.n_initial_samples == 5
+        assert X.vocs['variables']['x3'] == [0, 1]
+
     def test_xopt_default(self):
         X = Xopt()
 
@@ -71,6 +104,7 @@ class TestXoptConfig:
 
         def dummy(x, y=None):
             return x
+
         X.evaluate_config['function'] = dummy
         X.configure_evaluate()
         assert X.evaluate_config['options'] == {'y': None}
@@ -78,9 +112,3 @@ class TestXoptConfig:
     def test_vocs_config(self):
         X = Xopt()
         X.configure_vocs()
-
-
-
-
-
-

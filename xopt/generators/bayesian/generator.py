@@ -5,6 +5,7 @@ import torch
 import pandas as pd
 from botorch.acquisition.monte_carlo import qUpperConfidenceBound
 from botorch.sampling import SobolQMCNormalSampler
+from botorch.acquisition.objective import LinearMCObjective
 
 from .base import BayesianGenerator
 from .acquisition.mobo import get_corrected_ref, create_mobo_acqf
@@ -17,13 +18,22 @@ logger = logging.getLogger(__name__)
 
 class UpperConfidenceBound(BayesianGenerator):
     def __init__(self, vocs, n_steps=1, batch_size=1, beta=2.0, **kwargs):
-        acquisition_options = {'beta': beta}
+        # need to specify a scalarized Objective to specify which index is the objective
+        if len(vocs['objectives']) != 1:
+            raise ValueError('cannot use UCB when multiple objectives are present')
+
         optimize_options = kwargs
         self.n_steps = n_steps
         super(UpperConfidenceBound, self).__init__(vocs,
                                                    qUpperConfidenceBound,
-                                                   acquisition_options,
+                                                   {},
                                                    optimize_options)
+
+        weights = torch.zeros(len(vocs['variables']) + 1, **self.tkwargs)
+        weights[-1] = 1.0
+        sco = LinearMCObjective(weights)
+        self.acquisition_function_options = {'beta': beta, 'objective': sco}
+
         self._n_samples = batch_size
 
     def is_terminated(self):
@@ -60,11 +70,11 @@ class ExpectedHypervolumeImprovement(BayesianGenerator):
         if sigma is not None:
             sigma = torch.tensor(sigma, **self.tkwargs)
 
-        self.acqisition_function_options = {'ref': ref_tensor,
-                                            'n_objectives': len(vocs['objectives']),
-                                            'n_constraints': len(vocs['constraints']),
-                                            'sigma': sigma,
-                                            'sampler': self.sampler}
+        self.acquisition_function_options = {'ref': ref_tensor,
+                                             'n_objectives': len(vocs['objectives']),
+                                             'n_constraints': len(vocs['constraints']),
+                                             'sigma': sigma,
+                                             'sampler': self.sampler}
         self._n_samples = batch_size
 
     def is_terminated(self):
@@ -112,11 +122,11 @@ class BayesianExploration(BayesianGenerator):
         else:
             sigma = torch.ones(len(self.vocs['variables']), **self.tkwargs) * 1e10
 
-        self.acqisition_function_options = {'n_constraints': len(vocs['constraints']),
-                                            'n_variables': len(self.vocs['variables']),
-                                            'sigma': sigma,
-                                            'sampler': self.sampler,
-                                            'q': batch_size}
+        self.acquisition_function_options = {'n_constraints': len(vocs['constraints']),
+                                             'n_variables': len(self.vocs['variables']),
+                                             'sigma': sigma,
+                                             'sampler': self.sampler,
+                                             'q': batch_size}
         self._n_samples = batch_size
 
     def is_terminated(self):

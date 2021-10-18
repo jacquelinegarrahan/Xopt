@@ -11,20 +11,21 @@ logger = logging.getLogger(__name__)
 
 class Batched(Algorithm):
     def __init__(self, config, vocs, evaluator, generator,
-                 n_initial_samples=1, output_path='.'):
-        self.n_inital_samples = n_initial_samples
-        super(Batched, self).__init__(config, vocs, evaluator, generator, output_path)
+                 n_initial_samples=1, output_path='.', restart_file=None):
+        self.n_initial_samples = n_initial_samples
+        super(Batched, self).__init__(config, vocs, evaluator, generator,
+                                      output_path, restart_file)
 
     def run(self):
         """
         Run batched algorithm
         """
         # create initial samples
-        rs = RandomSample(self.vocs, self.n_inital_samples)
+        rs = RandomSample(self.vocs, self.n_initial_samples)
 
         # generate a set of samples that has at least one valid sample
         logger.info('Generating and submitting initial samples')
-        while True:
+        while True and self.n_initial_samples:
             samples = rs.generate(self.data)
             self.evaluator.submit_samples(samples)
             results, vaild_flag = self.evaluator.collect_results()
@@ -33,7 +34,12 @@ class Batched(Algorithm):
             else:
                 logger.warning('random sampling did not return any valid data')
 
-        self.data = self.generator.transform_data(results)
+        if self.n_initial_samples:
+            results = self.generator.transform_data(results)
+            if self.data is not None:
+                self.data = pd.concat([self.data, results], ignore_index=True)
+            else:
+                self.data = results
 
         # do optimization loop
         while not self.generator.is_terminated():
