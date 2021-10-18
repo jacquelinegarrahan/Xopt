@@ -26,9 +26,9 @@ def reformat_config(config: Dict) -> Dict:
     new_config = deepcopy(config)
 
     # check xopt
-    if 'generator' in new_config['xopt']:
-        warnings.warn('`generator` keyword no longer allowed in xopt config, removing')
-        del new_config['xopt']['generator']
+    if 'algorithm' in new_config['xopt']:
+        warnings.warn('`algorithm` keyword no longer allowed in xopt config')
+        del new_config['xopt']['algorithm']
 
     if 'verbose' in new_config['xopt']:
         warnings.warn('`verbose` keyword no longer allowed in xopt config')
@@ -44,7 +44,7 @@ def reformat_config(config: Dict) -> Dict:
 
     if 'templates' in new_config['evaluate']:
         warnings.warn('`templates` keyword no longer allowed in evaluate config, '
-                       'moving to `options`')
+                      'moving to `options`')
         try:
             new_config['evaluate']['options'].update({'templates': new_config[
                 'evaluate']['templates']})
@@ -66,15 +66,37 @@ def reformat_config(config: Dict) -> Dict:
         logger.warning('`templates` keyword no longer allowed in vocs config, '
                        'moving to evaluate `options`')
         try:
-            new_config['evaluate']['options'].update({'templates': new_config[
-                'vocs']['templates']})
+            new_config['evaluate']['options'].update({'templates':
+                                                          new_config['vocs'][
+                                                              'templates']}
+                                                     )
         except KeyError:
             new_config['evaluate']['options'] = {'templates': new_config[
                 'vocs']['templates']}
 
         del new_config['vocs']['templates']
 
+    if 'generator' in new_config:
+        warnings.warn('`generator` keyword no longer allowed in xopt config, '
+                      'replacing with algorithm')
+
+        new_config['algorithm'] = new_config['generator']
+        del new_config['generator']
+
+    try:
+        if (new_config['algorithm']['name'] is not None and new_config['algorithm'][
+            'function'] is not None):
+            warnings.warn('can only specify algorithm name OR function, deleting '
+                          'function')
+            del new_config['algorithm']['function']
+    except KeyError:
+        pass
+
+    # modify function call in evaluate
+    if 'evaluate' in new_config['evaluate']:
+        logger.warning('`evaluate key in evaluate no longer allowed, replacing with '
+                       '`function` keyword')
+        new_config['evaluate']['function'] = new_config['evaluate']['evaluate']
+        del new_config['evaluate']['evaluate']
+
     return new_config
-
-
-

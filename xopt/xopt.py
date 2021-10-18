@@ -70,13 +70,13 @@ class Xopt:
         vocs, which contains the simulation name, and templates
 
         """
+        # reformat old config files if needed
+        self.config = reformat_config(self.config)
+
         # make sure config dict has the required keys
         for name in ALL_DEFAULTS:
             if name not in self.config:
                 raise Exception(f'Key {name} is required in config for Xopt')
-
-        # reformat old config files if needed
-        self.config = reformat_config(self.config)
 
         # load any high level config files
         for ele in ['xopt', 'evaluate', 'algorithm', 'vocs']:

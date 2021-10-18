@@ -1,7 +1,7 @@
 import copy
 
 from xopt import Xopt
-from .test_functions.multi_fidelity import VOCS, evaluate
+from .test_functions.multi_fidelity import VOCS
 
 
 class TestClassMultiFidelity:

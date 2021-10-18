@@ -7,7 +7,7 @@ class TestLegacy:
 xopt:
   output_path: .
   verbose: true
-  generator: cnsga
+  algorithm: cnsga
   
 generator:
   name: cnsga
@@ -24,18 +24,12 @@ simulation:
   name: impact_with_distgen
   evaluate: xopt.tests.test_functions.TNK.evaluate_TNK
   options:
-    verbose: false
-    workdir: .
-    archive_path: .
+    extra_option: null
     
 vocs:
   name: LCLS cu_inj Impact-T and Disgten full optimization v9
   description: data set for 20 pc for lcls_cu_inj, 20k particles
   simulation: impact_with_distgen
-  templates:
-    impact_config: .
-    distgen_input_file: .
-  
   variables:
 
     # Distgen
