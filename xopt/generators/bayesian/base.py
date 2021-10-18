@@ -35,11 +35,12 @@ class BayesianGenerator(ContinuousGenerator, ABC):
         self.model = None
         self.acquisition_function = acqisition_function
         self.acquisition_function_options = acquisition_options or {}
+        self.optimization_options = optimize_options or {}
 
         # get optimization kwargs defaults
         optimization_defaults = get_function_defaults(optimize_acqf)
 
-        self.optimization_options = check_and_fill_defaults(optimize_options,
+        self.optimization_options = check_and_fill_defaults(self.optimization_options,
                                                             optimization_defaults)
 
         self.tkwargs = {"dtype": torch.double, "device": torch.device("cpu")}
@@ -56,10 +57,15 @@ class BayesianGenerator(ContinuousGenerator, ABC):
             else:
                 logger.warning("gpu requested but not found, using cpu")
 
+        self._data = None
+
     def _generate(self, data) -> pd.DataFrame:
         """
         Generate datapoints for sampling using an acquisition function and a model
         """
+        # save dataframe of most recent generate call for internal use
+        self._data = data
+
         # get valid data from dataframe and convert to torch tensors
         # + do normalization required by bototrch models
         valid_df = data.loc[data['status'] == 'done']
@@ -82,6 +88,12 @@ class BayesianGenerator(ContinuousGenerator, ABC):
         bounds = torch.zeros(2, len(self.vocs['variables']), **self.tkwargs)
         bounds[1, :] = 1.0
 
+        candidates = self._get_and_optimize_acq(bounds)
+
+        candidates = candidates.detach().cpu().numpy()
+        return untransform_x(self.numpy_to_dataframe(candidates), self.vocs)
+
+    def _get_and_optimize_acq(self, bounds) -> torch.Tensor:
         # set up acquisition function object
         acq_func = self.acquisition_function(self.model,
                                              **self.acquisition_function_options)
@@ -102,5 +114,4 @@ class BayesianGenerator(ContinuousGenerator, ABC):
             **self.optimization_options
         )
 
-        candidates = candidates.detach().cpu().numpy()
-        return untransform_x(self.numpy_to_dataframe(candidates), self.vocs)
+        return candidates

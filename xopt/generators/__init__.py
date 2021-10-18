@@ -1,6 +1,6 @@
 from .random import RandomSample
 from .bayesian.generator import UpperConfidenceBound, \
-    ExpectedHypervolumeImprovement, BayesianExploration
+    ExpectedHypervolumeImprovement, BayesianExploration, MultiFidelity
 
 KNOWN_GENERATORS = {
     'cnsga': 'xopt.cnsga.cnsga',
@@ -9,5 +9,5 @@ KNOWN_GENERATORS = {
     'bayesian_optimization': 'xopt.bayesian.generators_old.bayesian_optimize',
     'bayesian_exploration': BayesianExploration,
     'expected_hypervolume_improvement': ExpectedHypervolumeImprovement,
-    'multi_fidelity': 'xopt.bayesian.generators_old.multi_fidelity_optimize'
+    'multi_fidelity': MultiFidelity
 }
