@@ -1,7 +1,7 @@
 import logging
 
 import pandas as pd
-
+import time
 from .algorithm import Algorithm
 from ..utils import BadDataError
 from ..generators.random import RandomSample
@@ -38,8 +38,11 @@ class Batched(Algorithm):
         # do optimization loop
         while not self.generator.is_terminated():
             logger.info('generating samples')
+            t0 = time.time()
             samples = self.generator.generate(self.data)
-            logger.debug(f'generated {len(samples)} samples')
+            logger.debug(f'generated {len(samples)} samples in {time.time() - t0:.4} '
+                         f'seconds')
+            logger.debug(f'samples\n{samples}')
             self.evaluator.submit_samples(samples)
 
             # gather results when all done
