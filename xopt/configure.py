@@ -19,7 +19,7 @@ EVALUATE_DEFAULTS = {
     'name': None,
     'function': None,
     'executor': None,
-    'options': None,
+    'options': {},
 }
 
 # Algorithms
@@ -27,15 +27,15 @@ ALGORITHM_DEFAULTS = {
     'name': None,
     'type': 'batched',
     'function': None,
-    'options': None,
+    'options': {},
 }
 
 VOCS_DEFAULTS = {
-    'variables': None,
-    'objectives': None,
-    'constraints': None,
-    'linked_variables': None,
-    'constants': None
+    'variables': {},
+    'objectives': {},
+    'constraints': {},
+    'linked_variables': {},
+    'constants': {}
 }
 
 ALL_DEFAULTS = {

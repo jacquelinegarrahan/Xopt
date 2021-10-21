@@ -1,24 +1,23 @@
 import logging
+from copy import deepcopy
 
-import numpy as np
-import copy
-import torch
 import pandas as pd
-from botorch.acquisition import PosteriorMean, AcquisitionFunction, \
-    InverseCostWeightedUtility
+import torch
+from botorch.acquisition import InverseCostWeightedUtility
 from botorch.acquisition.monte_carlo import qUpperConfidenceBound
+from botorch.acquisition.objective import LinearMCObjective
 from botorch.models import AffineFidelityCostModel
 from botorch.optim import optimize_acqf
 from botorch.optim.initializers import gen_one_shot_kg_initial_conditions
 from botorch.sampling import SobolQMCNormalSampler
-from botorch.acquisition.objective import LinearMCObjective
 
-from .base import BayesianGenerator
-from .acquisition.mobo import get_corrected_ref, create_mobo_acqf
 from .acquisition.exploration import create_bayes_exp_acq
-from .acquisition.multi_fidelity import create_mf_acq, get_mfkg
+from .acquisition.mobo import get_corrected_ref, create_mobo_acqf
+from .acquisition.multi_fidelity import get_mfkg, get_recommendation
+from .models.models import create_multi_fidelity_model
+from .base import BayesianGenerator
+from ..utils import transform_data, untransform_x
 from ...utils import check_dataframe
-from ..utils import transform_data
 
 logger = logging.getLogger(__name__)
 
@@ -146,7 +145,10 @@ class MultiFidelity(BayesianGenerator):
                  budget=1,
                  batch_size=1,
                  fixed_cost=0.01,
-                 **kwargs):
+                 num_restarts: int = 20,
+                 raw_samples: int = 1024,
+                 num_fantasies: int = 128,
+                 **kwargs) -> None:
 
         # need to specify a scalarized Objective to specify which index is the objective
         if len(vocs['objectives']) != 1:
@@ -158,12 +160,15 @@ class MultiFidelity(BayesianGenerator):
             raise RuntimeWarning('cost not normalized to [0, 1] range, proceed with '
                                  'caution')
 
-        acq = create_mf_acq
-        optimization_options = {'num_restarts': 20,
-                                "raw_samples": 1024,
-                                "num_fantasies": 128, }.update(kwargs)
+        optimization_options = {"raw_samples": raw_samples,
+                                'options': {"batch_limit": 10, "maxiter": 200}
+                                }
 
-        super(MultiFidelity, self).__init__(vocs, acq, {}, optimization_options)
+        super(MultiFidelity, self).__init__(vocs,
+                                            None,
+                                            {},
+                                            optimization_options,
+                                            create_model_f=create_multi_fidelity_model)
         self.budget = budget
 
         # construct target fidelities dict
@@ -173,7 +178,10 @@ class MultiFidelity(BayesianGenerator):
                 tf[idx] = 1.0
         self.target_fidelities = tf
         self.fixed_cost = fixed_cost
-        self.batch_size = batch_size
+        self.set_n_samples(batch_size)
+
+        self.num_restarts = num_restarts
+        self.num_fantasies = num_fantasies
 
     def _get_and_optimize_acq(self, bounds) -> torch.Tensor:
 
@@ -181,38 +189,48 @@ class MultiFidelity(BayesianGenerator):
                                              fixed_cost=self.fixed_cost)
         cost_aware_utility = InverseCostWeightedUtility(cost_model=cost_model)
 
+        mfkg_acqf = get_mfkg(self.model,
+                             bounds,
+                             cost_aware_utility,
+                             self.num_restarts,
+                             self.optimization_options,
+                             len(self.vocs['variables']),
+                             self.target_fidelities)
+
         X_init = gen_one_shot_kg_initial_conditions(
-            acq_function=get_mfkg(self.model,
-                                  bounds,
-                                  cost_aware_utility,
-                                  self.optimization_options,
-                                  len(self.vocs['variables']),
-                                  self.target_fidelities),
+            acq_function=mfkg_acqf,
             bounds=bounds,
-            q=self.batch_size,
-            num_restarts=self.optimization_options.get('num_restarts', 10),
-            raw_samples=self.optimization_options.get('raw_samples', 512)
+            q=self._n_samples,
+            num_restarts=self.num_restarts,
+            raw_samples=self.optimization_options['raw_samples']
         )
 
+        oo_copy = deepcopy(self.optimization_options)
+        oo_copy.update({'batch_initial_conditions': X_init})
         candidates, _ = optimize_acqf(
-            acq_function=get_mfkg(self.model,
-                                  bounds,
-                                  cost_aware_utility,
-                                  self.optimization_options,
-                                  len(self.vocs['variables']),
-                                  self.target_fidelities),
+            acq_function=mfkg_acqf,
             bounds=bounds,
-            q=self.batch_size,
-            num_restarts=self.optimization_options.get('num_restarts', 10),
-            raw_samples=self.optimization_options.get('raw_samples', 512),
-            batch_initial_conditions=X_init,
-            options={'batch_limit': 5, 'max_iter': 200}
+            q=self._n_samples,
+            num_restarts=self.num_restarts,
+            **oo_copy
         )
         return candidates
+
+    def get_recommendation(self, data):
+        model = self._create_model(data)
+        result = get_recommendation(model,
+                                    len(self.vocs['variables']),
+                                    self.target_fidelities,
+                                    self.tkwargs,
+                                    self.num_restarts,
+                                    self.optimization_options)
+
+        result = result.detach().cpu().numpy()
+        return untransform_x(self.numpy_to_dataframe(result), self.vocs)
 
     def is_terminated(self):
         # calculate total cost and compare to budget
         if self._data is not None:
-            return self._data['cost'].sum() > self.budget
+            return (self._data['cost'] + self.fixed_cost).sum() > self.budget
         else:
             return False

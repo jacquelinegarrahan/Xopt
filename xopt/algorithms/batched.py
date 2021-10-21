@@ -1,9 +1,9 @@
 import logging
+import time
 
 import pandas as pd
-import time
+
 from .algorithm import Algorithm
-from ..utils import BadDataError
 from ..generators.random import RandomSample
 
 logger = logging.getLogger(__name__)
@@ -25,6 +25,7 @@ class Batched(Algorithm):
 
         # generate a set of samples that has at least one valid sample
         logger.info('Generating and submitting initial samples')
+        results = None
         while True and self.n_initial_samples:
             samples = rs.generate(self.data)
             self.evaluator.submit_samples(samples)

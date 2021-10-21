@@ -68,17 +68,17 @@ class TestXoptConfig:
         # test generator specification
         X = Xopt()
         with pytest.raises(ValueError):
-            X.configure_generator()
+            X.configure_algorithm()
 
         # retry with a bad function name
         with pytest.raises(Exception):
             X.algorithm_config['function'] = 'dummy'
-            X.configure_generator()
+            X.configure_algorithm()
 
         # retry with bad module
         X.algorithm_config['function'] = 'dummy.dummy'
         with pytest.raises(ModuleNotFoundError):
-            X.configure_generator()
+            X.configure_algorithm()
 
     def test_evaluate_config(self):
         X = Xopt()

@@ -10,7 +10,6 @@ from .configure import ALL_DEFAULTS, VOCS_DEFAULTS, EVALUATE_DEFAULTS, \
     ALGORITHM_DEFAULTS
 from .tools import get_n_required_fuction_arguments, \
     get_function_defaults
-from .evaluators import DummyExecutor
 from .utils import check_and_fill_defaults
 
 logger = logging.getLogger(__name__)

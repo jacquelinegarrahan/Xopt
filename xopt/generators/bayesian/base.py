@@ -25,7 +25,8 @@ class BayesianGenerator(ContinuousGenerator, ABC):
                  vocs: Dict,
                  acqisition_function: Callable,
                  acquisition_options: Dict = None,
-                 optimize_options: Dict = None
+                 optimize_options: Dict = None,
+                 create_model_f: Callable = create_model
                  ):
         """
         General Bayesian optimization generator
@@ -36,6 +37,7 @@ class BayesianGenerator(ContinuousGenerator, ABC):
         self.acquisition_function = acqisition_function
         self.acquisition_function_options = acquisition_options or {}
         self.optimization_options = optimize_options or {}
+        self.create_model_f = create_model_f
 
         # get optimization kwargs defaults
         optimization_defaults = get_function_defaults(optimize_acqf)
@@ -66,11 +68,25 @@ class BayesianGenerator(ContinuousGenerator, ABC):
         # save dataframe of most recent generate call for internal use
         self._data = data
 
+        # create model from data
+        self.model = self._create_model(data)
+
+        # optimize the acquisition function in normalized space
+        bounds = torch.zeros(2, len(self.vocs['variables']), **self.tkwargs)
+        bounds[1, :] = 1.0
+
+        # get candidates
+        candidates = self._get_and_optimize_acq(bounds)
+
+        candidates = candidates.detach().cpu().numpy()
+        return untransform_x(self.numpy_to_dataframe(candidates), self.vocs)
+
+    def _create_model(self, data):
         # get valid data from dataframe and convert to torch tensors
         # + do normalization required by bototrch models
         valid_df = data.loc[data['status'] == 'done']
 
-        #check to make sure there is some data
+        # check to make sure there is some data
         if len(valid_df) == 0:
             raise RuntimeError('no data to create GP model')
 
@@ -82,16 +98,7 @@ class BayesianGenerator(ContinuousGenerator, ABC):
         train_data['Y'] = -train_data['Y']
 
         # create and train model
-        self.model = create_model(train_data, vocs=self.vocs)
-
-        # optimize the acquisition function in normalized space
-        bounds = torch.zeros(2, len(self.vocs['variables']), **self.tkwargs)
-        bounds[1, :] = 1.0
-
-        candidates = self._get_and_optimize_acq(bounds)
-
-        candidates = candidates.detach().cpu().numpy()
-        return untransform_x(self.numpy_to_dataframe(candidates), self.vocs)
+        return self.create_model_f(train_data, vocs=self.vocs)
 
     def _get_and_optimize_acq(self, bounds) -> torch.Tensor:
         # set up acquisition function object
@@ -105,12 +112,14 @@ class BayesianGenerator(ContinuousGenerator, ABC):
             )
 
         # optimize
+        self.optimization_options['raw_samples'] = self.optimization_options[
+            'raw_samples'] or 512
+
         candidates, _ = optimize_acqf(
             acq_function=acq_func,
             bounds=bounds,
             q=self._n_samples,
             num_restarts=self.optimization_options.get('num_restarts', 20),
-            raw_samples=self.optimization_options.get('raw_samples', 512),
             **self.optimization_options
         )
 
