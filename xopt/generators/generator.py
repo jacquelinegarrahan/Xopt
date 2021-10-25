@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 class Generator(ABC):
     def __init__(self, vocs: Dict):
         self.vocs = vocs
-        self._n_samples = -1
+        self._n_samples = 1
         self.n_calls = 0
 
     def generate(self, data) -> pd.DataFrame:

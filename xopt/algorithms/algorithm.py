@@ -53,7 +53,7 @@ class Algorithm(ABC):
 
         logger.debug('saving data to file')
         with open(os.path.join(self.output_path, 'results.json'), 'w') as outfile:
-            json.dump(info, outfile)
+            json.dump(info, outfile, default=serializable)
 
     def load_data(self, fname):
         """
@@ -64,3 +64,7 @@ class Algorithm(ABC):
 
         self.data = pd.DataFrame(data_dict['results'])
 
+
+# define a default json serializer
+def serializable(obj):
+    return obj.__dict__

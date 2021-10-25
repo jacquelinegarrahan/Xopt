@@ -1,32 +1,30 @@
+import logging
 from abc import ABC
+from typing import Dict, Callable, Union
 
-import numpy as np
+import pandas as pd
 import torch
 from botorch.acquisition import AcquisitionFunction
-from botorch.acquisition.monte_carlo import qUpperConfidenceBound
+from botorch.acquisition.monte_carlo import MCAcquisitionFunction
 from botorch.optim.optimize import optimize_acqf
 
-from ..generator import ContinuousGenerator
 from .models.models import create_model
-from ...vocs_tools import get_bounds
-from typing import Dict, Callable
-import pandas as pd
+from ..generator import ContinuousGenerator
 from ..utils import untransform_x
+from ...tools import get_function_defaults, get_function
 from ...utils import check_and_fill_defaults
-from ...tools import get_function_defaults
-
-import logging
 
 logger = logging.getLogger(__name__)
 
 
-class BayesianGenerator(ContinuousGenerator, ABC):
+class BayesianGenerator(ContinuousGenerator):
     def __init__(self,
                  vocs: Dict,
-                 acqisition_function: Callable,
+                 acquisition_function: Union[Callable, str] = None,
                  acquisition_options: Dict = None,
                  optimize_options: Dict = None,
-                 create_model_f: Callable = create_model
+                 create_model_f: Callable = create_model,
+                 n_steps: int = 1
                  ):
         """
         General Bayesian optimization generator
@@ -34,10 +32,18 @@ class BayesianGenerator(ContinuousGenerator, ABC):
         """
         super(BayesianGenerator, self).__init__(vocs)
         self.model = None
-        self.acquisition_function = acqisition_function
+
+        # if acquisition function is a string try to get the callable using function
+        # import
+        if isinstance(acquisition_function, str):
+            self.acquisition_function = get_function(acquisition_function)
+        else:
+            self.acquisition_function = acquisition_function
+
         self.acquisition_function_options = acquisition_options or {}
         self.optimization_options = optimize_options or {}
         self.create_model_f = create_model_f
+        self.n_steps = n_steps
 
         # get optimization kwargs defaults
         optimization_defaults = get_function_defaults(optimize_acqf)
@@ -48,7 +54,7 @@ class BayesianGenerator(ContinuousGenerator, ABC):
         self.tkwargs = {"dtype": torch.double, "device": torch.device("cpu")}
 
         # set up gpu if requested
-        use_gpu = acquisition_options.get('use_gpu', False)
+        use_gpu = self.acquisition_function_options.get('use_gpu', False)
         if use_gpu:
             if torch.cuda.is_available():
                 self.tkwargs["device"] = torch.device("cuda")
@@ -59,7 +65,24 @@ class BayesianGenerator(ContinuousGenerator, ABC):
             else:
                 logger.warning("gpu requested but not found, using cpu")
 
+        # optimize the acquisition function in normalized space
+        self.bounds = torch.zeros(2, len(self.vocs['variables']), **self.tkwargs)
+        self.bounds[1, :] = 1.0
+
         self._data = None
+
+    def is_terminated(self):
+        return self.n_calls >= self.n_steps
+
+    def get_acqf(self, model, **kwargs):
+        acq_func = self.acquisition_function(model, **kwargs)
+
+        if not isinstance(acq_func, AcquisitionFunction):
+            raise RuntimeError(
+                "callable `acquisition_function` does not return type "
+                "AcquisitionFunction"
+            )
+        return acq_func
 
     def _generate(self, data) -> pd.DataFrame:
         """
@@ -69,19 +92,18 @@ class BayesianGenerator(ContinuousGenerator, ABC):
         self._data = data
 
         # create model from data
-        self.model = self._create_model(data)
+        model = self.create_model(data)
 
-        # optimize the acquisition function in normalized space
-        bounds = torch.zeros(2, len(self.vocs['variables']), **self.tkwargs)
-        bounds[1, :] = 1.0
+        # get acq_function
+        acq_func = self.get_acqf(model, **self.acquisition_function_options)
 
         # get candidates
-        candidates = self._get_and_optimize_acq(bounds)
+        candidates = self._optimize_acq(acq_func)
 
         candidates = candidates.detach().cpu().numpy()
         return untransform_x(self.numpy_to_dataframe(candidates), self.vocs)
 
-    def _create_model(self, data):
+    def create_model(self, data):
         # get valid data from dataframe and convert to torch tensors
         # + do normalization required by bototrch models
         valid_df = data.loc[data['status'] == 'done']
@@ -100,16 +122,7 @@ class BayesianGenerator(ContinuousGenerator, ABC):
         # create and train model
         return self.create_model_f(train_data, vocs=self.vocs)
 
-    def _get_and_optimize_acq(self, bounds) -> torch.Tensor:
-        # set up acquisition function object
-        acq_func = self.acquisition_function(self.model,
-                                             **self.acquisition_function_options)
-
-        if not isinstance(acq_func, AcquisitionFunction):
-            raise RuntimeError(
-                "callable `acqisition_function` does not return type "
-                "AcquisitionFunction"
-            )
+    def _optimize_acq(self, acq_func) -> torch.Tensor:
 
         # optimize
         self.optimization_options['raw_samples'] = self.optimization_options[
@@ -117,7 +130,7 @@ class BayesianGenerator(ContinuousGenerator, ABC):
 
         candidates, _ = optimize_acqf(
             acq_function=acq_func,
-            bounds=bounds,
+            bounds=self.bounds,
             q=self._n_samples,
             num_restarts=self.optimization_options.get('num_restarts', 20),
             **self.optimization_options

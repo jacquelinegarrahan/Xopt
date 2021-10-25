@@ -4,7 +4,7 @@ import torch
 
 from xopt import Xopt
 import pytest
-from .test_functions import TNK
+from xopt.tests.test_functions import TNK
 
 
 class TestClassMOBO:

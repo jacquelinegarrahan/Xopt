@@ -25,7 +25,7 @@ VOCS = {
 # labeled version
 def evaluate(inputs, extra_option='abc', **params):
     x = np.array((inputs['x1'], inputs['x2'], inputs['x3']))
-    outputs = {'y1': np.linalg.norm(x - 0.15)**2}
+    outputs = {'y1': np.linalg.norm(x - 0.5*np.ones(3))**2}
 
     # raise random exceptions
     if np.random.rand() > 0.5:

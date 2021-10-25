@@ -27,23 +27,23 @@ class UpperConfidenceBound(BayesianGenerator):
         # need to specify a scalarized Objective to specify which index is the objective
         if len(vocs['objectives']) != 1:
             raise ValueError('cannot use UCB when multiple objectives are present')
+        if len(vocs['constraints']) != 0:
+            raise ValueError('cannot use UCB with constraints...yet')
 
         optimize_options = kwargs
         self.n_steps = n_steps
         super(UpperConfidenceBound, self).__init__(vocs,
                                                    qUpperConfidenceBound,
                                                    {},
-                                                   optimize_options)
+                                                   optimize_options,
+                                                   n_steps=n_steps)
 
-        weights = torch.zeros(len(vocs['variables']) + 1, **self.tkwargs)
-        weights[-1] = 1.0
-        sco = LinearMCObjective(weights)
-        self.acquisition_function_options = {'beta': beta, 'objective': sco}
+        #weights = torch.zeros(len(vocs['objectives']), **self.tkwargs)
+        #weights[-1] = 1.0
+        #sco = LinearMCObjective(weights)
+        self.acquisition_function_options = {'beta': beta}#, 'objective': sco}
 
         self._n_samples = batch_size
-
-    def is_terminated(self):
-        return self.n_calls >= self.n_steps
 
 
 class ExpectedHypervolumeImprovement(BayesianGenerator):
@@ -56,9 +56,9 @@ class ExpectedHypervolumeImprovement(BayesianGenerator):
                                       "nonnegative": True},
                                  'sequential': True, })
         super(ExpectedHypervolumeImprovement, self).__init__(vocs, acq,
-                                                             {}, optimize_options)
+                                                             {}, optimize_options,
+                                                             n_steps=n_steps)
         self.sampler = SobolQMCNormalSampler(num_samples=mc_samples)
-        self.n_steps = n_steps
         if ref is not None:
             if list(ref) == list(self.vocs['objectives']):
                 ref = get_corrected_ref(self.vocs, ref)
@@ -82,9 +82,6 @@ class ExpectedHypervolumeImprovement(BayesianGenerator):
                                              'sigma': sigma,
                                              'sampler': self.sampler}
         self._n_samples = batch_size
-
-    def is_terminated(self):
-        return self.n_calls >= self.n_steps
 
     def transform_data(self, data: pd.DataFrame) -> pd.DataFrame:
         """
@@ -115,10 +112,10 @@ class BayesianExploration(BayesianGenerator):
                                       "nonnegative": True},
                                  'sequential': True, })
 
-        super(BayesianExploration, self).__init__(vocs, acq, {}, optimize_options)
+        super(BayesianExploration, self).__init__(vocs, acq, {}, optimize_options,
+                                                  n_steps=n_steps)
 
         self.sampler = SobolQMCNormalSampler(num_samples=mc_samples)
-        self.n_steps = n_steps
 
         if batch_size != 1 and sigma is not None:
             raise ValueError('cannot use multi-batch with proximal biasing')
@@ -135,9 +132,6 @@ class BayesianExploration(BayesianGenerator):
                                              'q': batch_size}
         self._n_samples = batch_size
 
-    def is_terminated(self):
-        return self.n_calls >= self.n_steps
-
 
 class MultiFidelity(BayesianGenerator):
     def __init__(self,
@@ -145,7 +139,7 @@ class MultiFidelity(BayesianGenerator):
                  budget=1,
                  batch_size=1,
                  fixed_cost=0.01,
-                 num_restarts: int = 20,
+                 num_restarts: int = 25,
                  raw_samples: int = 1024,
                  num_fantasies: int = 128,
                  **kwargs) -> None:
@@ -183,33 +177,39 @@ class MultiFidelity(BayesianGenerator):
         self.num_restarts = num_restarts
         self.num_fantasies = num_fantasies
 
-    def _get_and_optimize_acq(self, bounds) -> torch.Tensor:
+    def get_acqf(self, model, **kwargs) -> torch.Tensor:
 
         cost_model = AffineFidelityCostModel(fidelity_weights=self.target_fidelities,
                                              fixed_cost=self.fixed_cost)
         cost_aware_utility = InverseCostWeightedUtility(cost_model=cost_model)
 
-        mfkg_acqf = get_mfkg(self.model,
-                             bounds,
+        mfkg_acqf = get_mfkg(model,
+                             self.bounds,
                              cost_aware_utility,
                              self.num_restarts,
                              self.optimization_options,
                              len(self.vocs['variables']),
                              self.target_fidelities)
 
-        X_init = gen_one_shot_kg_initial_conditions(
-            acq_function=mfkg_acqf,
-            bounds=bounds,
+        return mfkg_acqf
+
+    def get_one_shot_kg_initial_conditions(self, acq_func):
+        return gen_one_shot_kg_initial_conditions(
+            acq_function=acq_func,
+            bounds=self.bounds,
             q=self._n_samples,
             num_restarts=self.num_restarts,
             raw_samples=self.optimization_options['raw_samples']
         )
 
+    def _optimize_acq(self, acq_func) -> torch.Tensor:
+        X_init = self.get_one_shot_kg_initial_conditions(acq_func)
+
         oo_copy = deepcopy(self.optimization_options)
         oo_copy.update({'batch_initial_conditions': X_init})
         candidates, _ = optimize_acqf(
-            acq_function=mfkg_acqf,
-            bounds=bounds,
+            acq_function=acq_func,
+            bounds=self.bounds,
             q=self._n_samples,
             num_restarts=self.num_restarts,
             **oo_copy
@@ -217,7 +217,7 @@ class MultiFidelity(BayesianGenerator):
         return candidates
 
     def get_recommendation(self, data):
-        model = self._create_model(data)
+        model = self.create_model(data)
         result = get_recommendation(model,
                                     len(self.vocs['variables']),
                                     self.target_fidelities,

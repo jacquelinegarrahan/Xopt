@@ -3,7 +3,7 @@ import copy
 import pytest
 
 from xopt import Xopt
-from .test_functions import TNK
+from xopt.tests.test_functions import TNK
 from xopt.generators.bayesian.utils import UnsupportedError
 
 
