@@ -76,7 +76,7 @@ class Generator(ABC):
         check_dataframe(data, self.vocs)
         return transform_data(data, self.vocs)
 
-    def dataframe_to_numpy(self, data: pd.DataFrame, use_transformed = True) -> Dict:
+    def dataframe_to_numpy(self, data: pd.DataFrame, use_transformed=True) -> Dict:
 
         check_dataframe(data, self.vocs)
         output = {}
@@ -90,7 +90,7 @@ class Generator(ABC):
                 if use_transformed:
                     output[key] = data[[ele + '_t' for ele in value]].to_numpy()
                 else:
-                    output[key] = data[value[0]].to_numpy()
+                    output[key] = data[value].to_numpy()
         return output
 
     def numpy_to_dataframe(self, X):

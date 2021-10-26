@@ -3,8 +3,8 @@ import torch
 from torch import Tensor
 from botorch.acquisition.analytic import UpperConfidenceBound
 from botorch.acquisition.objective import ScalarizedObjective
-
-
+from botorch.acquisition.analytic import PosteriorMean
+from copy import deepcopy
 # define classes that combine acquisition functions
 
 
@@ -40,22 +40,25 @@ class QualityAwareExploration(botorch.acquisition.acquisition.AcquisitionFunctio
         super().__init__(model)
         self.nominal = nominal_quality_parameters
 
-        # modify model such that the length scale of the target function with respect
-        # to the quality parameters is very long (assumes normalization)
-        model_lengthscales = model.covar_module.base_kernel.lengthscale
+        model_copy = deepcopy(model)
+
+        # modify model copy such that the length scale of the target function with
+        # respect to the quality parameters is very long (assumes normalization)
+        model_lengthscales = model_copy.covar_module.base_kernel.lengthscale
         for ele in nominal_quality_parameters.keys():
             model_lengthscales[0, target_idx, ele] = 100.0
-        model.covar_module.base_kernel.lengthscale = model_lengthscales
+        model_copy.covar_module.base_kernel.lengthscale = model_lengthscales
 
         tkwargs = tkwargs or {}
-        w1 = torch.zeros(model.num_outputs, **tkwargs)
+        w1 = torch.zeros(model_copy.num_outputs, **tkwargs)
         w1[target_idx] = 1.0
-        w2 = torch.zeros(model.num_outputs, **tkwargs)
+        w2 = torch.zeros(model_copy.num_outputs, **tkwargs)
         w2[quality_idx] = 1.0
-        self.target_acq = PosteriorUncertainty(model, objective=ScalarizedObjective(w1))
+        self.target_acq = PosteriorUncertainty(model_copy,
+                                               objective=ScalarizedObjective(w1))
 
-        self.quality_acq = UpperConfidenceBound(model, beta,
-                                                objective=ScalarizedObjective(w2))
+        self.quality_acq = PosteriorMean(model_copy,
+                                         objective=ScalarizedObjective(w2))
 
     def forward(self, X: Tensor) -> Tensor:
         # calculate the posterior uncertainty where the quality parameters are at
@@ -73,7 +76,7 @@ class QualityAwareExploration(botorch.acquisition.acquisition.AcquisitionFunctio
         return pos
 
     def get_qual_acq(self,  X: Tensor) -> Tensor:
-        return self.quality_acq.forward(X)
+        return torch.log(1 + torch.exp(self.quality_acq.forward(X)))
 
 
 class MultiplyAcquisitionFunction(botorch.acquisition.acquisition.AcquisitionFunction):

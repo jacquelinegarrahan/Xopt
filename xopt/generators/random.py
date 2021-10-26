@@ -2,7 +2,8 @@ import pandas as pd
 
 from .generator import ContinuousGenerator
 from ..vocs_tools import get_bounds
-import numpy as np
+from botorch.utils.sampling import draw_sobol_samples
+import torch
 
 
 class RandomSample(ContinuousGenerator):
@@ -10,9 +11,8 @@ class RandomSample(ContinuousGenerator):
         return self.n_calls > self.max_calls
 
     def _generate(self, data) -> pd.DataFrame:
-        bounds = get_bounds(self.vocs)
-        r = np.random.rand(self._n_samples, bounds.shape[-1])
-        result = r * (bounds[1] - bounds[0]) + bounds[0]
+        bounds = torch.tensor(get_bounds(self.vocs))
+        result = draw_sobol_samples(bounds, self._n_samples, 1).numpy().squeeze()
         return self.numpy_to_dataframe(result)
 
     def __init__(self, vocs, n_samples=1, max_calls=1):

@@ -8,22 +8,25 @@ class TestQualityAware:
     algorithm:
       name: quality_aware_exploration
       options:  
-          n_initial_samples: 5
-          n_steps: 2
+          n_initial_samples: 50
+          n_steps: 1
           target_observation: y1
           quality_observation: q1
           nominal_quality_parameters:
-            x2: 0.5
+            x3: 0.5
+            x4: 0.5
 
     evaluate:
       name: test_TNK
-      function: xopt.tests.test_functions.quality_aware.evaluate
+      function: xopt.tests.test_functions.quality_aware.evaluate_4d
 
     vocs:
       name: TNK_test
       variables:
         x1: [0, 1.0]
         x2: [0, 1.0]
+        x3: [0, 1.0]
+        x4: [0, 1.0]
       objectives:
         y1: None
         q1: MAXIMIZE
@@ -39,4 +42,4 @@ class TestQualityAware:
         # test generalized bayesian optimization from external acquisition function
         X = Xopt(self.config)
         results = X.run()
-
+        print(results.describe())

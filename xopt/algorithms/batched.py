@@ -42,10 +42,14 @@ class Batched(Algorithm):
             else:
                 self.data = results
 
+        # transform data for use in point generation
+        self.data = self.generator.transform_data(self.data)
+
         # do optimization loop
         while not self.generator.is_terminated():
             logger.info('generating samples')
             t0 = time.time()
+
             samples = self.generator.generate(self.data)
             logger.debug(f'generated {len(samples)} samples in {time.time() - t0:.4} '
                          f'seconds')
@@ -55,13 +59,15 @@ class Batched(Algorithm):
             # gather results when all done
             logger.info('collecting results')
             results, valid = self.evaluator.collect_results()
-            # add transformed results to dataframe
-            results = self.generator.transform_data(results)
+
             if not valid:
                 logger.warning('No valid results from measurements, see save file for '
                                'details')
             # concatenate results
             self.data = pd.concat([self.data, results], ignore_index=True)
+
+            #transform data for use in point generation next loop
+            self.data = self.generator.transform_data(self.data)
 
             # save results to file
             self.save_data()

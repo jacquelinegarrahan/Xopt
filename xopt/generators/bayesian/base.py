@@ -92,18 +92,18 @@ class BayesianGenerator(ContinuousGenerator):
         self._data = data
 
         # create model from data
-        model = self.create_model(data)
+        self.model = self.create_model(data)
 
         # get acq_function
-        acq_func = self.get_acqf(model, **self.acquisition_function_options)
+        self.acq_func = self.get_acqf(self.model, **self.acquisition_function_options)
 
         # get candidates
-        candidates = self._optimize_acq(acq_func)
+        candidates = self._optimize_acq(self.acq_func)
 
         candidates = candidates.detach().cpu().numpy()
         return untransform_x(self.numpy_to_dataframe(candidates), self.vocs)
 
-    def create_model(self, data):
+    def create_model(self, data, use_transformed=True):
         # get valid data from dataframe and convert to torch tensors
         # + do normalization required by bototrch models
         valid_df = data.loc[data['status'] == 'done']
@@ -112,12 +112,17 @@ class BayesianGenerator(ContinuousGenerator):
         if len(valid_df) == 0:
             raise RuntimeError('no data to create GP model')
 
-        train_data = self.dataframe_to_numpy(valid_df)
-        for name, val in train_data.items():
-            train_data[name] = torch.tensor(train_data[name], **self.tkwargs)
+        if use_transformed:
+            train_data = self.dataframe_to_numpy(valid_df)
+            for name, val in train_data.items():
+                train_data[name] = torch.tensor(train_data[name], **self.tkwargs)
 
-        # negate objective values -> bototrch assumes maximization
-        train_data['Y'] = -train_data['Y']
+            # negate objective values -> bototrch assumes maximization
+            train_data['Y'] = -train_data['Y']
+        else:
+            train_data = self.dataframe_to_numpy(valid_df, False)
+            for name, val in train_data.items():
+                train_data[name] = torch.tensor(train_data[name], **self.tkwargs)
 
         # create and train model
         return self.create_model_f(train_data, vocs=self.vocs)
