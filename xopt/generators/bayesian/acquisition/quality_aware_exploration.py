@@ -8,7 +8,7 @@ from botorch.acquisition.objective import ScalarizedObjective
 # define classes that combine acquisition functions
 
 
-class PosteriorUncertainty(botorch.acquisition.analytic.AnalyticAcquisitionFunction):
+class PosteriorUncertainty(botorch.acquisition.analytic.AcquisitionFunction):
     def __init__(self, model, **kwargs):
         super(PosteriorUncertainty, self).__init__(model)
         self._ucb = UpperConfidenceBound(model, 1e8, **kwargs)
@@ -18,21 +18,62 @@ class PosteriorUncertainty(botorch.acquisition.analytic.AnalyticAcquisitionFunct
 
 
 class QualityAwareExploration(botorch.acquisition.acquisition.AcquisitionFunction):
-    def __init__(self, model, target_idx=0, quality_idx=1, beta=2.0):
+    """
+    Acquisition function to do quality aware optimization. Free parameters are
+    divided into two groups, target_parameters and quality_parameters. We assume that
+    our target function depends strongly on target_parameters and weakly on
+    quality_parameters and that the measurement quality can depend strongly on both sets
+    of parameters. As such, we only wish to maximize model uncertainty with respect to
+    target_parameters, fixing quality_parameters at nominal values.
+
+
+    """
+
+    def __init__(self,
+                 model,
+                 nominal_quality_parameters,
+                 target_idx=0,
+                 quality_idx=1,
+                 beta=2.0,
+                 tkwargs=None
+                 ):
         super().__init__(model)
-        w1 = torch.zeros(model.num_outputs)
+        self.nominal = nominal_quality_parameters
+
+        # modify model such that the length scale of the target function with respect
+        # to the quality parameters is very long (assumes normalization)
+        model_lengthscales = model.covar_module.base_kernel.lengthscale
+        for ele in nominal_quality_parameters.keys():
+            model_lengthscales[0, target_idx, ele] = 100.0
+        model.covar_module.base_kernel.lengthscale = model_lengthscales
+
+        tkwargs = tkwargs or {}
+        w1 = torch.zeros(model.num_outputs, **tkwargs)
         w1[target_idx] = 1.0
-        w2 = w1.clone()
+        w2 = torch.zeros(model.num_outputs, **tkwargs)
         w2[quality_idx] = 1.0
-        target_acq = PosteriorUncertainty(model, objective=ScalarizedObjective(w1))
+        self.target_acq = PosteriorUncertainty(model, objective=ScalarizedObjective(w1))
 
-        quality_acq = UpperConfidenceBound(model, beta,
-                                           objective=ScalarizedObjective(w2))
-
-        self.total_acq = MultiplyAcquisitionFunction(model, [target_acq, quality_acq])
+        self.quality_acq = UpperConfidenceBound(model, beta,
+                                                objective=ScalarizedObjective(w2))
 
     def forward(self, X: Tensor) -> Tensor:
-        return self.total_acq(X)
+        # calculate the posterior uncertainty where the quality parameters are at
+        # their nominal values
+        pos = self.get_target_acq(X)
+        qual = self.get_qual_acq(X)
+
+        return pos * qual
+
+    def get_target_acq(self,  X: Tensor) -> Tensor:
+        X_target_eval = X.clone()
+        for idx, value in self.nominal.items():
+            X_target_eval[..., idx] = value
+        pos = self.target_acq.forward(X_target_eval)
+        return pos
+
+    def get_qual_acq(self,  X: Tensor) -> Tensor:
+        return self.quality_acq.forward(X)
 
 
 class MultiplyAcquisitionFunction(botorch.acquisition.acquisition.AcquisitionFunction):

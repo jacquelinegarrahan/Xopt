@@ -1,0 +1,42 @@
+from xopt import Xopt
+
+
+class TestQualityAware:
+    YAML = """
+    xopt: {output_path: null}
+
+    algorithm:
+      name: quality_aware_exploration
+      options:  
+          n_initial_samples: 5
+          n_steps: 2
+          target_observation: y1
+          quality_observation: q1
+          nominal_quality_parameters:
+            x2: 0.5
+
+    evaluate:
+      name: test_TNK
+      function: xopt.tests.test_functions.quality_aware.evaluate
+
+    vocs:
+      name: TNK_test
+      variables:
+        x1: [0, 1.0]
+        x2: [0, 1.0]
+      objectives:
+        y1: None
+        q1: MAXIMIZE
+
+      constraints: {}
+      linked_variables: {}
+      constants: {}
+
+    """
+    config = YAML
+
+    def test_quality_aware(self):
+        # test generalized bayesian optimization from external acquisition function
+        X = Xopt(self.config)
+        results = X.run()
+

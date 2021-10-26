@@ -1,6 +1,7 @@
 from .random import RandomSample
 from .bayesian.generator import UpperConfidenceBound, \
-    ExpectedHypervolumeImprovement, BayesianExploration, MultiFidelity
+    ExpectedHypervolumeImprovement, BayesianExploration, MultiFidelity, \
+    QualityAware
 from .bayesian.base import BayesianGenerator
 
 KNOWN_GENERATORS = {
@@ -10,5 +11,6 @@ KNOWN_GENERATORS = {
     'bayesian_optimization': BayesianGenerator,
     'bayesian_exploration': BayesianExploration,
     'expected_hypervolume_improvement': ExpectedHypervolumeImprovement,
-    'multi_fidelity': MultiFidelity
+    'multi_fidelity': MultiFidelity,
+    'quality_aware_exploration': QualityAware
 }

@@ -1,6 +1,6 @@
 import logging
 from copy import deepcopy
-
+from typing import Dict
 import pandas as pd
 import torch
 from botorch.acquisition import InverseCostWeightedUtility
@@ -14,6 +14,7 @@ from botorch.sampling import SobolQMCNormalSampler
 from .acquisition.exploration import create_bayes_exp_acq
 from .acquisition.mobo import get_corrected_ref, create_mobo_acqf
 from .acquisition.multi_fidelity import get_mfkg, get_recommendation
+from .acquisition.quality_aware_exploration import QualityAwareExploration
 from .models.models import create_multi_fidelity_model
 from .base import BayesianGenerator
 from ..utils import transform_data, untransform_x
@@ -38,12 +39,43 @@ class UpperConfidenceBound(BayesianGenerator):
                                                    optimize_options,
                                                    n_steps=n_steps)
 
-        #weights = torch.zeros(len(vocs['objectives']), **self.tkwargs)
-        #weights[-1] = 1.0
-        #sco = LinearMCObjective(weights)
-        self.acquisition_function_options = {'beta': beta}#, 'objective': sco}
-
+        # weights = torch.zeros(len(vocs['objectives']), **self.tkwargs)
+        # weights[-1] = 1.0
+        # sco = LinearMCObjective(weights)
+        self.acquisition_function_options = {'beta': beta}  # , 'objective': sco}
         self._n_samples = batch_size
+
+
+class QualityAware(BayesianGenerator):
+    def __init__(self,
+                 vocs,
+                 target_observation: str = None,
+                 quality_observation: str = None,
+                 nominal_quality_parameters: Dict = None,
+                 n_steps=1,
+                 beta=2.0,
+                 **kwargs):
+        optimize_options = kwargs
+        self.n_steps = n_steps
+
+        # replace nominal_quality_parameters with indicies
+        variable_list = list(vocs['variables'].keys())
+        nom_qual_param = {variable_list.index(name): val for name, val in
+                          nominal_quality_parameters.items()}
+
+        objective_list = list(vocs['objectives'].keys())
+        acquisition_function_options = \
+            {'beta': beta,
+             'target_idx': objective_list.index(target_observation),
+             'quality_idx': objective_list.index(quality_observation),
+             'nominal_quality_parameters': nom_qual_param}
+
+        super(QualityAware, self).__init__(vocs,
+                                           QualityAwareExploration,
+                                           acquisition_function_options,
+                                           optimize_options,
+                                           n_steps=n_steps)
+        self.acquisition_function_options['tkwargs'] = self.tkwargs
 
 
 class ExpectedHypervolumeImprovement(BayesianGenerator):
