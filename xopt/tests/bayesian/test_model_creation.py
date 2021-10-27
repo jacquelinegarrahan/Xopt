@@ -13,9 +13,11 @@ class TestModelCreation:
         train_y = torch.rand(5, 2)
         train_c = torch.rand(5, 4)
 
-        model = create_model(train_x, train_y, train_c, vocs=self.vocs)
+        train_data = {'X': train_x, 'Y': train_y, 'C': train_c}
+        model = create_model(train_data, vocs=self.vocs)
 
         train_y_nan = train_y.clone()
         train_y_nan[0][1] = np.nan
+        train_data = {'X': train_x, 'Y': train_y, 'C': train_c}
 
-        model = create_model(train_x, train_y_nan, train_c, vocs=self.vocs)
+        model = create_model(train_data, vocs=self.vocs)

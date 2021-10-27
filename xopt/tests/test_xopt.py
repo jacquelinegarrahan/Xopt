@@ -43,7 +43,7 @@ class TestXoptConfig:
 
         # check default configs
         assert list(X.config.keys()) == ['xopt',
-                                         'generator',
+                                         'algorithm',
                                          'evaluate',
                                          'vocs']
 

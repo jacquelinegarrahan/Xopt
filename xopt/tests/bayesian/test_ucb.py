@@ -10,8 +10,8 @@ class TestUCB:
     algorithm:
       name: upper_confidence_bound
       options:  
-        n_steps: 10
-        n_initial_samples: 5
+        n_steps: 2
+        n_initial_samples: 50
 
     evaluate: 
       name: quad_3d

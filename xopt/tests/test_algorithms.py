@@ -1,4 +1,5 @@
 import json
+import os
 from copy import deepcopy
 
 import numpy as np
@@ -8,7 +9,7 @@ from .test_functions.TNK import VOCS, evaluate_TNK
 from ..algorithms.batched import Batched
 from ..algorithms.continuous import Continuous
 from ..evaluators.evaluator import Evaluator
-from ..generators.bayesian.generator import UpperConfidenceBound
+from ..generators.bayesian.generator import BayesianExploration
 from ..generators.random import RandomSample
 
 
@@ -48,10 +49,12 @@ class TestAlgorithms:
                       )
         vocs = deepcopy(VOCS)
         del vocs['objectives']['y2']
-        generator = UpperConfidenceBound(vocs, 2)
+        generator = BayesianExploration(vocs, 2, mc_samples=2)
 
         # read in and load file
         alg = Batched(vocs, vocs, E, generator, n_initial_samples=5)
         alg.load_data(fname)
         alg.run()
         assert len(alg.data) == 17
+        os.remove(fname)
+

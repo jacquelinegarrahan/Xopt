@@ -7,7 +7,7 @@ class TestCNSGA:
     YAML = """
     xopt: {output_path: null}
 
-    generator:
+    algorithm:
       name: cnsga
       options: 
         max_generations: 50, 
@@ -24,8 +24,6 @@ class TestCNSGA:
     vocs:
       name: TNK_test
       description: null
-      simulation: test_TNK
-      templates: null
       variables:
         x1: [0, 3.14159]
         x2: [0, 3.14159]

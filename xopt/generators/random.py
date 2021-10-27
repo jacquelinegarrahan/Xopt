@@ -11,8 +11,10 @@ class RandomSample(ContinuousGenerator):
         return self.n_calls > self.max_calls
 
     def _generate(self, data) -> pd.DataFrame:
-        bounds = torch.tensor(get_bounds(self.vocs))
-        result = draw_sobol_samples(bounds, self._n_samples, 1).numpy().squeeze()
+        bounds = torch.tensor(get_bounds(self.vocs)).double()
+        result = draw_sobol_samples(bounds, self._n_samples,
+                                    1).numpy().reshape(
+            self._n_samples, -1)
         return self.numpy_to_dataframe(result)
 
     def __init__(self, vocs, n_samples=1, max_calls=1):

@@ -36,7 +36,7 @@ class Generator(ABC):
 
             # if n_samples is greater than zero make sure that the generate function
             # returns the correct number of samples
-            if self._n_samples > 0 and (len(samples) != self._n_samples):
+            if self._n_samples > 1 and (len(samples) != self._n_samples):
                 raise BadDataError('generator function did not return the requested '
                                    'number of samples')
         else:
@@ -82,11 +82,11 @@ class Generator(ABC):
         output = {}
         keys = {'X': self.vocs['variables'],
                 'Y': self.vocs['objectives'],
-                'C': self.vocs['constraints'],
+                'C': self.vocs.get('constraints', None),
                 }
 
         for key, value in keys.items():
-            if value is not {}:
+            if value is not None:
                 if use_transformed:
                     output[key] = data[[ele + '_t' for ele in value]].to_numpy()
                 else:
@@ -143,7 +143,7 @@ class FunctionalGenerator(Generator):
             results = self.function(self.vocs, data, **self.function_options)
         elif sig_pos_parameters == ['vocs', 'X', 'Y']:
             # convert pandas dataframe to numpy
-            input_data = self.dataframe_to_numpy(data)
+            input_data = self.dataframe_to_numpy(data, use_transformed=False)
             X = input_data['X']
             Y = input_data['Y']
 

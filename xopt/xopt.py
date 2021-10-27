@@ -153,6 +153,10 @@ class Xopt:
         return self._evaluator
 
     @property
+    def vocs(self):
+        return self._vocs
+
+    @property
     def evaluate_config(self):
         return self.config['evaluate']
 

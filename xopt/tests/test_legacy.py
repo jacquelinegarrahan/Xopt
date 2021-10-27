@@ -10,15 +10,10 @@ xopt:
   algorithm: cnsga
   
 generator:
-  name: cnsga
-  function: xopt.cnsga.cnsga
-  options:
-    max_generations: 1000
-    population_size: 300
-    crossover_probability: 0.9
-    mutation_probability: 1.0 
-    selection: auto
-    verbose: true
+  name: upper_confidence_bound
+  options:  
+    n_steps: 2
+    n_initial_samples: 50
 
 simulation:
   name: impact_with_distgen
@@ -40,12 +35,8 @@ vocs:
   constants: null
     
   objectives:
-    end_norm_emit_xy: MINIMIZE
-  
-  constraints:
-    end_sigma_z: [LESS_THAN, 0.0015]    
+    end_norm_emit_xy: MINIMIZE   
 """
 
     def test_legacy(self):
         X = Xopt(self.legacy_yaml)
-        print(X.config)

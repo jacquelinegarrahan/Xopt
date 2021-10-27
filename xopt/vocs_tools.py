@@ -62,7 +62,7 @@ def weight_list(objective_dict):
 def get_bounds(vocs: Dict) -> np.ndarray:
     # get initial bounds
     return np.vstack(
-        [np.array(ele) for _, ele in vocs['variables'].items()]).T
+        [np.asfarray(ele) for _, ele in vocs['variables'].items()]).T
 
 
 # -------------------------------------------------------

@@ -5,7 +5,6 @@ from .bayesian.generator import UpperConfidenceBound, \
 from .bayesian.base import BayesianGenerator
 
 KNOWN_GENERATORS = {
-    'cnsga': 'xopt.cnsga.cnsga',
     'random_sample': RandomSample,
     'upper_confidence_bound': UpperConfidenceBound,
     'bayesian_optimization': BayesianGenerator,
