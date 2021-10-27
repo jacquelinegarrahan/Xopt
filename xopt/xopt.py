@@ -7,7 +7,7 @@ from xopt import __version__
 from xopt.legacy import reformat_config
 from xopt.tools import expand_paths, load_config, get_function, isotime
 from .configure import ALL_DEFAULTS, VOCS_DEFAULTS, EVALUATE_DEFAULTS, \
-    ALGORITHM_DEFAULTS
+    parse_algorithm_config, parse_evaluator_config
 from .tools import get_n_required_fuction_arguments, \
     get_function_defaults
 from .utils import check_and_fill_defaults
@@ -41,10 +41,9 @@ class Xopt:
         config = deepcopy(config)
         self._configured_dict = None
 
-        self.generator = None
-        self.algorithm = None
-        self.evaluator = None
-        self.vocs = None
+        self._algorithm = None
+        self._evaluator = None
+        self._vocs = None
 
         if config is not None:
             config = load_config(config)
@@ -94,113 +93,45 @@ class Xopt:
     # Configures
     def configure_algorithm(self):
         """ configure generator and algorithm """
+        algorithm, algorithm_config, algorithm_kwargs, \
+            generator_config, generator_kwargs = \
+            parse_algorithm_config(self.config['algorithm'])
 
-        # check high level options are correct for algorithm
-        algorithm_config = check_and_fill_defaults(
-            self.config['algorithm'],
-            ALGORITHM_DEFAULTS
-        )
-
-        # get default algorithm options
-        algorithm_type = algorithm_config['type']
-        algorithm_default_options = {}
-        if algorithm_type in KNOWN_ALGORITHMS:
-            algorithm_default_options = get_function_defaults(
-                KNOWN_ALGORITHMS[algorithm_type])
-        else:
-            ValueError('must use a named algorithm')
-
-        # get generator function/object
-        generator_type = algorithm_config['name']
-        if algorithm_config['function'] is not None:
-            generator_function = get_function(algorithm_config['function'])
-        else:
-            generator_function = None
-
-        # get generator defaults
-        if generator_type is not None and generator_function is None:
-
-            # case where generator is specified by name
-            if generator_type in KNOWN_GENERATORS:
-                generator_default_options = get_function_defaults(
-                    KNOWN_GENERATORS[generator_type]
-                )
-            else:
-                raise ValueError('unknown generator name specified')
-        elif generator_type is None and generator_function is not None:
-
-            # case where no generator is specified but function is given by name
-            function_default_options = get_function_defaults(generator_function)
-            generator_default_options = get_function_defaults(FunctionalGenerator)
-            generator_default_options.update(function_default_options)
-        else:
-            # case where there is a problem
-            raise ValueError('Either `name` or `function` must be specified')
-
-        # combine defaults dict for the generator and the algorithm into one
-        all_default_options = {**algorithm_default_options,
-                               **generator_default_options}
-
-        # get options from config file
-        algorithm_config['options'] = check_and_fill_defaults(
-            algorithm_config['options'] or {}, all_default_options)
+        vocs = self.config['vocs']
 
         # create generator object
-        generator_kwargs = {k: algorithm_config['options'][k] for k in
-                            generator_default_options.keys()}
-        if generator_type is not None:
-            self.generator = KNOWN_GENERATORS[generator_type](self.config['vocs'],
-                                                              **generator_kwargs)
+        if generator_config['type'] is not None:
+            generator = KNOWN_GENERATORS[generator_config['type']](
+                vocs, **generator_kwargs)
         else:
-            self.generator = FunctionalGenerator(self.config['vocs'],
-                                                 generator_function,
-                                                 **generator_kwargs)
+            generator = FunctionalGenerator(self.config['vocs'],
+                                            generator_config['generator_function'],
+                                            **generator_kwargs)
 
         # create algorithm object
-        algorithm_kwargs = {k: algorithm_config['options'][k] for k in
-                            algorithm_default_options.keys()}
-        self.algorithm = KNOWN_ALGORITHMS[algorithm_type](
+        self._algorithm = algorithm(
             self.config,
             self.config['vocs'],
-            self.evaluator,
-            self.generator,
+            self._evaluator,
+            generator,
             **algorithm_kwargs)
 
         # update config object
         self.config['algorithm'] = algorithm_config
 
     def configure_evaluate(self):
-        # check high level options are correct for evaluate
-        evaluate_config = check_and_fill_defaults(
-            self.config['evaluate'],
-            EVALUATE_DEFAULTS
-        )
+        evaluate_function, executor, evaluate_options = parse_evaluator_config(
+            self.config['evaluate'])
 
-        evaluate_function = get_function(evaluate_config['function'])
-        evaluate_function_defaults = get_function_defaults(evaluate_function)
-
-        evaluate_config['options'] = check_and_fill_defaults(
-            evaluate_config['options'] or {},
-            evaluate_function_defaults)
-
-        executor = evaluate_config['executor']
-        evaluate_options = evaluate_config['options']
-
-        # check evaluate_function
-        n_required_args = get_n_required_fuction_arguments(evaluate_function)
-        if n_required_args != 1:
-            raise ValueError(f'function has {n_required_args}, but should have '
-                             f'exactly one. ')
-
-        self.evaluator = Evaluator(self.vocs,
-                                   evaluate_function,
-                                   executor,
-                                   evaluate_options)
+        self._evaluator = Evaluator(self._vocs,
+                                    evaluate_function,
+                                    executor,
+                                    evaluate_options)
 
     def configure_vocs(self):
         self.config['vocs'] = check_and_fill_defaults(self.config['vocs'],
                                                       VOCS_DEFAULTS)
-        self.vocs = self.config['vocs']
+        self._vocs = self.config['vocs']
 
     # --------------------------
     # Loading from file
@@ -208,6 +139,18 @@ class Xopt:
         """Load config from file (JSON or YAML) or data"""
         self.config = load_config(config)
         self.configure_all()
+
+    @property
+    def algorithm(self):
+        return self._algorithm
+
+    @property
+    def generator(self):
+        return self._algorithm.generator
+
+    @property
+    def evaluator(self):
+        return self._evaluator
 
     @property
     def evaluate_config(self):

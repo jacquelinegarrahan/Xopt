@@ -1,11 +1,11 @@
 import logging
 from copy import deepcopy
 from typing import Dict
+
 import pandas as pd
 import torch
 from botorch.acquisition import InverseCostWeightedUtility
 from botorch.acquisition.monte_carlo import qUpperConfidenceBound
-from botorch.acquisition.objective import LinearMCObjective
 from botorch.models import AffineFidelityCostModel
 from botorch.optim import optimize_acqf
 from botorch.optim.initializers import gen_one_shot_kg_initial_conditions
@@ -15,8 +15,8 @@ from .acquisition.exploration import create_bayes_exp_acq
 from .acquisition.mobo import get_corrected_ref, create_mobo_acqf
 from .acquisition.multi_fidelity import get_mfkg, get_recommendation
 from .acquisition.quality_aware_exploration import QualityAwareExploration
-from .models.models import create_multi_fidelity_model
 from .base import BayesianGenerator
+from .models.models import create_multi_fidelity_model
 from ..utils import transform_data, untransform_x
 from ...utils import check_dataframe
 
@@ -35,15 +35,10 @@ class UpperConfidenceBound(BayesianGenerator):
         self.n_steps = n_steps
         super(UpperConfidenceBound, self).__init__(vocs,
                                                    qUpperConfidenceBound,
-                                                   {},
+                                                   {'beta': beta},
                                                    optimize_options,
                                                    n_steps=n_steps)
-
-        # weights = torch.zeros(len(vocs['objectives']), **self.tkwargs)
-        # weights[-1] = 1.0
-        # sco = LinearMCObjective(weights)
-        self.acquisition_function_options = {'beta': beta}  # , 'objective': sco}
-        self._n_samples = batch_size
+        self.set_n_samples(batch_size)
 
 
 class QualityAware(BayesianGenerator):
@@ -162,7 +157,7 @@ class BayesianExploration(BayesianGenerator):
                                              'sigma': sigma,
                                              'sampler': self.sampler,
                                              'q': batch_size}
-        self._n_samples = batch_size
+        self.set_n_samples(batch_size)
 
 
 class MultiFidelity(BayesianGenerator):
