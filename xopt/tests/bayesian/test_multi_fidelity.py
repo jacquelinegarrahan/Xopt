@@ -24,11 +24,10 @@ class TestClassMultiFidelity:
         X = Xopt(test_config)
         X.run()
 
-    def test_batch(self):
+    def test_continuous(self):
         test_config = copy.deepcopy(self.config)
-        test_config['algorithm']['type'] = 'continuous'
-        test_config['algorithm']['options']['n_processes'] = 2
+        test_config['algorithm']['options']['control_flow'] = 'continuous'
+        test_config['algorithm']['options']['n_initial_samples'] = 2
         test_config['algorithm']['options']['budget'] = 4
 
         X = Xopt(test_config)
-        print(X.run())

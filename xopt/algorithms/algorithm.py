@@ -4,6 +4,7 @@ import pandas as pd
 
 from ..generators.generator import Generator, ContinuousGenerator
 from ..evaluators.evaluator import Evaluator
+from .control_flow import KNOWN_CONTROL_FLOW
 from typing import Dict, Union
 from copy import deepcopy
 import os
@@ -16,36 +17,37 @@ logger = logging.getLogger(__name__)
 
 class Algorithm(ABC):
     def __init__(self,
-                 config: Dict,
                  vocs: Dict,
                  evaluator: Evaluator,
                  generator: Union[Generator, ContinuousGenerator],
                  output_path: str = '',
-                 restart_file: str = None):
-        self.config = config
+                 restart_file: str = None,
+                 control_flow: str = 'batched',
+                 n_initial_samples: int = 1):
         self.vocs = vocs
         self.evaluator = evaluator
         self.generator = generator
         self.output_path = output_path
+        self.control_flow = control_flow
+        self.n_initial_samples = n_initial_samples
 
         if restart_file is not None:
             self.load_data(restart_file)
         else:
             self.data = None
 
-    @abstractmethod
     def run(self):
         """
-        run routine
+        run algorithm
         """
-        pass
+        return KNOWN_CONTROL_FLOW[self.control_flow](self)
 
     def save_data(self):
         """
         Save data and config to a json file
         """
         # start with config info
-        info = deepcopy(self.config)
+        info = deepcopy(self.vocs)
 
         # add data
         if self.data is not None:

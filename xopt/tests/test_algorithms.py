@@ -6,11 +6,10 @@ import numpy as np
 import pandas as pd
 
 from .test_functions.TNK import VOCS, evaluate_TNK
-from ..algorithms.batched import Batched
-from ..algorithms.continuous import Continuous
 from ..evaluators.evaluator import Evaluator
 from ..generators.bayesian.generator import BayesianExploration
 from ..generators.random import RandomSample
+from ..algorithms.algorithm import Algorithm
 
 
 class TestAlgorithms:
@@ -21,7 +20,7 @@ class TestAlgorithms:
 
         gen = RandomSample(VOCS, 3, 2)
         config = {'vocs': VOCS}
-        r = Batched(config, config['vocs'], E, gen)
+        r = Algorithm(config['vocs'], E, gen)
         r.run()
 
     def test_continuous(self):
@@ -31,7 +30,8 @@ class TestAlgorithms:
 
         gen = RandomSample(VOCS, 1, 5)
         config = {'vocs': VOCS}
-        r = Continuous(config, config['vocs'], E, gen, 5)
+        r = Algorithm(config['vocs'], E, gen, n_initial_samples=5,
+                      control_flow='continuous')
         print(r.run())
 
     def test_data_load(self):
@@ -52,7 +52,7 @@ class TestAlgorithms:
         generator = BayesianExploration(vocs, 2, mc_samples=2)
 
         # read in and load file
-        alg = Batched(vocs, vocs, E, generator, n_initial_samples=5)
+        alg = Algorithm(vocs, E, generator, n_initial_samples=5)
         alg.load_data(fname)
         alg.run()
         assert len(alg.data) == 17

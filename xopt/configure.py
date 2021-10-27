@@ -8,10 +8,10 @@ import logging
 from typing import Dict
 from .tools import get_function_defaults, get_n_required_fuction_arguments, get_function
 from .utils import check_and_fill_defaults
-from .algorithms import KNOWN_ALGORITHMS
 from .generators.generator import FunctionalGenerator
 from .generators import KNOWN_GENERATORS
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
+from .algorithms.algorithm import Algorithm
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +30,6 @@ EVALUATE_DEFAULTS = {
 # Algorithms
 ALGORITHM_DEFAULTS = {
     'name': None,
-    'type': 'batched',
     'function': None,
     'options': {},
 }
@@ -59,13 +58,8 @@ def parse_algorithm_config(algorithm_config: Dict):
     )
 
     # get default algorithm options
-    algorithm_type = algorithm_config['type']
-    algorithm_default_options = {}
-    if algorithm_type in KNOWN_ALGORITHMS:
-        algorithm_default_options = get_function_defaults(
-            KNOWN_ALGORITHMS[algorithm_type])
-    else:
-        ValueError('must use a named algorithm')
+
+    algorithm_default_options = get_function_defaults(Algorithm)
 
     # get generator function/object
     generator_type = algorithm_config['name']
@@ -112,9 +106,7 @@ def parse_algorithm_config(algorithm_config: Dict):
     algorithm_kwargs = {k: algorithm_config['options'][k] for k in
                         algorithm_default_options.keys()}
 
-    algorithm = KNOWN_ALGORITHMS[algorithm_type]
-
-    return algorithm, algorithm_config, algorithm_kwargs, generator_config, \
+    return algorithm_config, algorithm_kwargs, generator_config, \
            generator_kwargs
 
 

@@ -5,19 +5,17 @@ import yaml
 
 from xopt import __version__
 from xopt.legacy import reformat_config
-from xopt.tools import expand_paths, load_config, get_function, isotime
-from .configure import ALL_DEFAULTS, VOCS_DEFAULTS, EVALUATE_DEFAULTS, \
-    parse_algorithm_config, parse_evaluator_config
-from .tools import get_n_required_fuction_arguments, \
-    get_function_defaults
+from xopt.tools import expand_paths, load_config, isotime
+from .configure import ALL_DEFAULTS, VOCS_DEFAULTS, parse_algorithm_config, \
+    parse_evaluator_config
 from .utils import check_and_fill_defaults
 
 logger = logging.getLogger(__name__)
 
 from .generators.generator import FunctionalGenerator
 from .generators import KNOWN_GENERATORS
+from .algorithms.algorithm import Algorithm
 from .evaluators.evaluator import Evaluator
-from .algorithms import KNOWN_ALGORITHMS
 
 
 class Xopt:
@@ -93,7 +91,7 @@ class Xopt:
     # Configures
     def configure_algorithm(self):
         """ configure generator and algorithm """
-        algorithm, algorithm_config, algorithm_kwargs, \
+        algorithm_config, algorithm_kwargs, \
             generator_config, generator_kwargs = \
             parse_algorithm_config(self.config['algorithm'])
 
@@ -109,8 +107,7 @@ class Xopt:
                                             **generator_kwargs)
 
         # create algorithm object
-        self._algorithm = algorithm(
-            self.config,
+        self._algorithm = Algorithm(
             self.config['vocs'],
             self._evaluator,
             generator,

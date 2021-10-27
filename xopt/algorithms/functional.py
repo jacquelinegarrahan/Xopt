@@ -1,8 +1,7 @@
 from typing import Dict, Union, Callable
 from ..generators.generator import Generator, ContinuousGenerator
 from ..evaluators.evaluator import Evaluator
-from .continuous import Continuous
-from .batched import Batched
+from .algorithm import Algorithm
 
 
 def run_algortihm(
@@ -10,7 +9,6 @@ def run_algortihm(
         generator: Union[Generator, ContinuousGenerator],
         function: Callable = None,
         evaluator: Evaluator = None,
-        algorithm_type: str = 'batched',
         **kwargs,
 ):
     """
@@ -29,14 +27,10 @@ def run_algortihm(
 
     # create algorithm arguments
     alg_config = {}
-    alg_args = (alg_config, vocs, evaluator, generator)
+    alg_args = (vocs, evaluator, generator)
 
     # create and call algorithm
-    alg_dict = {'batched': Batched, 'continuous': Continuous}
-    if algorithm_type not in alg_dict:
-        raise KeyError('specified algorithm type is not available')
-
-    alg = alg_dict[algorithm_type](*alg_args, **kwargs)
+    alg = Algorithm(*alg_args, **kwargs)
     alg.run()
 
     return alg
