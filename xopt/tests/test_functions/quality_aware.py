@@ -54,6 +54,6 @@ VOCS_4d = {
 def evaluate_4d(inputs):
     x = np.array((inputs['x1'], inputs['x2'], inputs['x3'], inputs['x4']))
     outputs = {'y1': np.linalg.norm(x[:2] - 0.5) ** 2,
-               'q1': 60-np.linalg.norm((x[2:] - x[:2])*10.0)**2}
+               'q1': 1.0-np.linalg.norm((x[2:] - x[:2]))**2}
 
     return outputs
