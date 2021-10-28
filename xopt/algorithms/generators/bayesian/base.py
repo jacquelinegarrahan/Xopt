@@ -8,8 +8,8 @@ from botorch.acquisition import AcquisitionFunction
 from botorch.acquisition.monte_carlo import MCAcquisitionFunction
 from botorch.optim.optimize import optimize_acqf
 
-from ...tools import get_function_defaults, get_function
-from ...utils import check_and_fill_defaults
+from xopt.tools import get_function_defaults, get_function
+from xopt.utils import check_and_fill_defaults
 from ..generator import ContinuousGenerator
 from ..utils import untransform_x
 from .models.models import create_model

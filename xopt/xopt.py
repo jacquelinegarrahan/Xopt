@@ -18,8 +18,8 @@ logger = logging.getLogger(__name__)
 
 from .algorithms.algorithm import Algorithm
 from .evaluators.evaluator import Evaluator
-from .generators import KNOWN_GENERATORS
-from .generators.generator import FunctionalGenerator
+from xopt.algorithms.generators import KNOWN_GENERATORS
+from xopt.algorithms.generators import FunctionalGenerator
 
 
 class Xopt:

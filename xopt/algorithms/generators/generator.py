@@ -6,7 +6,7 @@ from typing import Callable, Dict
 import numpy as np
 import pandas as pd
 
-from ..utils import check_dataframe, BadFunctionError, BadDataError
+from xopt.utils import check_dataframe, BadFunctionError, BadDataError
 from .utils import transform_data
 
 logger = logging.getLogger(__name__)

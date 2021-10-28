@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from ..generators.generator import FunctionalGenerator, BadFunctionError
+from xopt.algorithms.generators import FunctionalGenerator, BadFunctionError
 
 
 class TestGeneratorBase:

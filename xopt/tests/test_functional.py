@@ -1,5 +1,5 @@
 from xopt.algorithms.functional import run_algortihm
-from xopt.generators.bayesian.generator import BayesianExploration
+from xopt.algorithms.generators.bayesian.generator import BayesianExploration
 
 # test function
 from xopt.tests.test_functions import TNK

@@ -4,12 +4,11 @@ Tools to configure an xopt run
 """
 import logging
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
-from copy import deepcopy
 from typing import Dict
 
 from .algorithms.algorithm import Algorithm
-from .generators import KNOWN_GENERATORS
-from .generators.generator import FunctionalGenerator
+from xopt.algorithms.generators import KNOWN_GENERATORS
+from xopt.algorithms.generators import FunctionalGenerator
 from .tools import get_function_defaults, get_n_required_fuction_arguments, get_function
 from .utils import check_and_fill_defaults
 

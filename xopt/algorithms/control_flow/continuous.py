@@ -4,8 +4,8 @@ import queue
 
 import pandas as pd
 
-from xopt.generators.generator import ContinuousGenerator
-from xopt.generators.random import RandomSample
+from xopt.algorithms.generators.generator import ContinuousGenerator
+from xopt.algorithms.generators.random import RandomSample
 from xopt.utils import BadDataError
 
 logger = logging.getLogger(__name__)

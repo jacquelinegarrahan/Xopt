@@ -1,4 +1,4 @@
-from ..generators.random import RandomSample
+from xopt.algorithms.generators import RandomSample
 from .test_functions.TNK import VOCS
 
 

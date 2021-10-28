@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 
-from xopt.generators.bayesian.models.models import create_model
+from xopt.algorithms.generators.bayesian.models.models import create_model
 
 
 class TestModelCreation:

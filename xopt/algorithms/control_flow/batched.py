@@ -3,7 +3,7 @@ import time
 
 import pandas as pd
 
-from xopt.generators.random import RandomSample
+from xopt.algorithms.generators.random import RandomSample
 
 logger = logging.getLogger(__name__)
 

@@ -2,7 +2,7 @@ import pandas as pd
 import torch
 from botorch.utils.sampling import draw_sobol_samples
 
-from ..vocs_tools import get_bounds
+from xopt.vocs_tools import get_bounds
 from .generator import ContinuousGenerator
 
 

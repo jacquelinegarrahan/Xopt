@@ -11,7 +11,7 @@ from botorch.optim import optimize_acqf
 from botorch.optim.initializers import gen_one_shot_kg_initial_conditions
 from botorch.sampling import SobolQMCNormalSampler
 
-from ...utils import check_dataframe
+from xopt.utils import check_dataframe
 from ..utils import transform_data, untransform_x
 from .acquisition.exploration import create_bayes_exp_acq
 from .acquisition.mobo import get_corrected_ref, create_mobo_acqf

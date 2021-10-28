@@ -7,8 +7,8 @@ import pandas as pd
 
 from ..algorithms.algorithm import Algorithm
 from ..evaluators.evaluator import Evaluator
-from ..generators.bayesian.generator import BayesianExploration
-from ..generators.random import RandomSample
+from xopt.algorithms.generators.bayesian import BayesianExploration
+from xopt.algorithms.generators import RandomSample
 from .test_functions.TNK import VOCS, evaluate_TNK
 
 

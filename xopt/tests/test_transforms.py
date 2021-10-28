@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from xopt.generators.utils import transform_data
+from xopt.algorithms.generators import transform_data
 
 
 class TestTransforms:

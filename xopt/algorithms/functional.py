@@ -1,7 +1,7 @@
 from typing import Dict, Union, Callable
 
 from ..evaluators.evaluator import Evaluator
-from ..generators.generator import Generator, ContinuousGenerator
+from xopt.algorithms.generators import Generator, ContinuousGenerator
 from .algorithm import Algorithm
 
 

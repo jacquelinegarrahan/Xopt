@@ -1,14 +1,14 @@
 import json
 import logging
 import os
-from abc import ABC, abstractmethod
+from abc import ABC
 from copy import deepcopy
 from typing import Dict, Union
 
 import pandas as pd
 
 from ..evaluators.evaluator import Evaluator
-from ..generators.generator import Generator, ContinuousGenerator
+from xopt.algorithms.generators import Generator, ContinuousGenerator
 from .control_flow import KNOWN_CONTROL_FLOW
 
 logger = logging.getLogger(__name__)

@@ -7,7 +7,7 @@ from .bayesian.generator import (
     QualityAware,
 )
 from .random import RandomSample
-
+from .generator import Generator, ContinuousGenerator, FunctionalGenerator
 KNOWN_GENERATORS = {
     "random_sample": RandomSample,
     "upper_confidence_bound": UpperConfidenceBound,
