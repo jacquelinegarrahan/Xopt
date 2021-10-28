@@ -10,9 +10,9 @@ from ..outcome_transforms import NanEnabledStandardize
 
 
 def create_model(train_data, vocs, custom_model=None, **kwargs):
-    train_x = train_data['X']
-    train_y = train_data['Y']
-    train_c = train_data.get('C', None)
+    train_x = train_data["X"]
+    train_y = train_data["Y"]
+    train_c = train_data.get("C", None)
 
     # create model
     if custom_model is None:
@@ -24,9 +24,7 @@ def create_model(train_data, vocs, custom_model=None, **kwargs):
         # test if there are nans in the training data
         if torch.any(torch.isnan(train_outputs)):
             output_standardize = NanEnabledStandardize(m=1)
-            model = get_nan_model(
-                train_x, train_outputs, None, output_standardize
-            )
+            model = get_nan_model(train_x, train_outputs, None, output_standardize)
         else:
             model = SingleTaskGP(
                 train_x,
@@ -43,16 +41,15 @@ def create_model(train_data, vocs, custom_model=None, **kwargs):
 
 
 def create_multi_fidelity_model(train_data, vocs):
-    train_x = train_data['X']
-    train_y = train_data['Y']
+    train_x = train_data["X"]
+    train_y = train_data["Y"]
     model = SingleTaskMultiFidelityGP(
         train_x,
         train_y,
         input_transform=None,
         outcome_transform=None,
-        data_fidelity=list(vocs['variables'].keys()).index('cost'),
+        data_fidelity=list(vocs["variables"].keys()).index("cost"),
     )
     mll = ExactMarginalLogLikelihood(model.likelihood, model)
     fit_gpytorch_model(mll)
     return model
-

@@ -15,13 +15,15 @@ from botorch.optim.optimize import optimize_acqf
 logger = logging.getLogger(__name__)
 
 
-def get_mfkg(model,
-             bounds,
-             cost_aware_utility,
-             num_restarts,
-             optimize_options,
-             n_variables,
-             target_fidelities):
+def get_mfkg(
+    model,
+    bounds,
+    cost_aware_utility,
+    num_restarts,
+    optimize_options,
+    n_variables,
+    target_fidelities,
+):
 
     curr_val_acqf = FixedFeatureAcquisitionFunction(
         acq_function=PosteriorMean(model),
@@ -51,12 +53,9 @@ def get_mfkg(model,
     )
 
 
-def get_recommendation(model,
-                       n_variables,
-                       target_fidelities,
-                       tkwargs,
-                       num_restarts,
-                       optimize_options):
+def get_recommendation(
+    model, n_variables, target_fidelities, tkwargs, num_restarts, optimize_options
+):
     bounds = torch.zeros((2, n_variables), **tkwargs)
     bounds[1, :] = 1.0
     rec_acqf = FixedFeatureAcquisitionFunction(
@@ -67,8 +66,11 @@ def get_recommendation(model,
     )
 
     final_rec, _ = optimize_acqf(
-        acq_function=rec_acqf, bounds=bounds[:, :-1], num_restarts=num_restarts, q=1,
-        **optimize_options
+        acq_function=rec_acqf,
+        bounds=bounds[:, :-1],
+        num_restarts=num_restarts,
+        q=1,
+        **optimize_options,
     )
 
     return rec_acqf._construct_X_full(final_rec)

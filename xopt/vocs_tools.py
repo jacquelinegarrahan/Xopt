@@ -8,17 +8,17 @@ from typing import Dict, Optional, Callable
 # VOCS utilities
 def save_vocs(vocs_dict, filePath=None):
     """
-    Write VOCS dictionary to a JSON file. 
+    Write VOCS dictionary to a JSON file.
     If no filePath is given, the name is chosen from the 'name' key + '.json'
     """
 
     if filePath:
         name = filePath
     else:
-        name = vocs_dict['name'] + '.json'
-    with open(name, 'w') as outfile:
-        json.dump(vocs_dict, outfile, ensure_ascii=True, indent='  ')
-    print(name, 'written')
+        name = vocs_dict["name"] + ".json"
+    with open(name, "w") as outfile:
+        json.dump(vocs_dict, outfile, ensure_ascii=True, indent="  ")
+    print(name, "written")
 
 
 def load_vocs(filePath):
@@ -26,7 +26,7 @@ def load_vocs(filePath):
     Load VOCS from a JSON file
     Returns a dict
     """
-    with open(filePath, 'r') as f:
+    with open(filePath, "r") as f:
         dat = json.load(f)
     return dat
 
@@ -34,13 +34,13 @@ def load_vocs(filePath):
 def skeys(some_dict):
     """
     Returns sorted keys
-    
+
     Useful for converting dicts to lists consistently
     """
     return sorted([*some_dict])
 
 
-OBJECTIVE_WEIGHT = {'MINIMIZE': -1.0, 'MAXIMIZE': 1.0}
+OBJECTIVE_WEIGHT = {"MINIMIZE": -1.0, "MAXIMIZE": 1.0}
 
 
 def weight_list(objective_dict):
@@ -48,7 +48,7 @@ def weight_list(objective_dict):
     Returns a list of weights for use in optimization.
     The objective dict should be of the form:
         {'obj1':'minimize', 'obj2':'maximize'}
-        
+
     The list is sorted by the keys.
     """
 
@@ -61,12 +61,12 @@ def weight_list(objective_dict):
 
 def get_bounds(vocs: Dict) -> np.ndarray:
     # get initial bounds
-    return np.vstack(
-        [np.asfarray(ele) for _, ele in vocs['variables'].items()]).T
+    return np.vstack([np.asfarray(ele) for _, ele in vocs["variables"].items()]).T
 
 
 # -------------------------------------------------------
 # Output evaulation
+
 
 def evaluate_objectives(objective_dict, output):
     """
@@ -90,19 +90,19 @@ def evaluate_constraints(constraint_dict, output):
         # check for nan
         if isnan(x):
             results.append(-666.0)
-        elif op == 'GREATER_THAN':  # x > d -> x-d > 0
+        elif op == "GREATER_THAN":  # x > d -> x-d > 0
             results.append(x - d)
-        elif op == 'LESS_THAN':  # x < d -> d-x > 0
+        elif op == "LESS_THAN":  # x < d -> d-x > 0
             results.append(d - x)
         else:
-            print('Unknown constraint operator:', op)
+            print("Unknown constraint operator:", op)
             raise
     return results
 
 
 def constraint_satisfaction(constraint_dict, output):
     """
-    Returns a dictionary of constraint names, and a bool with their satisfaction. 
+    Returns a dictionary of constraint names, and a bool with their satisfaction.
     """
     vals = evaluate_constraints(constraint_dict, output)
     keys = skeys(constraint_dict)
@@ -129,12 +129,12 @@ def evaluate_constraints_inverse(constraint_dict, eval):
     con_names = skeys(constraint_dict)
     for name, val in zip(con_names, eval):
         op, d = constraint_dict[name]
-        if op == 'GREATER_THAN':
+        if op == "GREATER_THAN":
             output[name] = val + d
-        elif op == 'LESS_THAN':
+        elif op == "LESS_THAN":
             output[name] = d - val
         else:
-            print('ERROR: unknown constraint operator: ', op)
+            print("ERROR: unknown constraint operator: ", op)
             raise
     return output
 
@@ -158,20 +158,20 @@ def inputs_from_vec(vec, vocs=None):
 
     """
     if not vocs:
-        vkeys = [f'variable_{i}' for i in range(len(vec))]
+        vkeys = [f"variable_{i}" for i in range(len(vec))]
         return dict(zip(vkeys, vec))
 
     # labeled inputs -> labeled outputs evaluate_f
-    vkeys = skeys(vocs['variables'])
+    vkeys = skeys(vocs["variables"])
     inputs = dict(zip(vkeys, vec))
 
-    # Constants    
-    if 'constants' in vocs:
-        inputs.update(vocs['constants'] or {})
+    # Constants
+    if "constants" in vocs:
+        inputs.update(vocs["constants"] or {})
 
     # Handle linked variables
-    if 'linked_variables' in vocs and vocs['linked_variables']:
-        for k, v in vocs['linked_variables'].items():
+    if "linked_variables" in vocs and vocs["linked_variables"]:
+        for k, v in vocs["linked_variables"].items():
             inputs[k] = inputs[v]
 
     return inputs
@@ -179,8 +179,8 @@ def inputs_from_vec(vec, vocs=None):
 
 def vec_from_inputs(inputs, labels=None):
     """
-    Forms vector from labeled inputs. 
-    
+    Forms vector from labeled inputs.
+
     """
     if not labels:
         labels = skeys(inputs)
@@ -190,28 +190,31 @@ def vec_from_inputs(inputs, labels=None):
 def random_inputs(vocs, n=None, include_constants=True, include_linked_variables=True):
     """
     Uniform sampling of the variables described in vocs['variables'] = min, max.
-    Returns a dict of inputs. 
-    If include_constants, the vocs['constants'] are added to the dict. 
-    
-    
+    Returns a dict of inputs.
+    If include_constants, the vocs['constants'] are added to the dict.
+
+
     Optional:
-        n (integer) to make arrays of inputs, of size n. 
-    
+        n (integer) to make arrays of inputs, of size n.
+
     """
     inputs = {}
-    for key, val in vocs['variables'].items():
+    for key, val in vocs["variables"].items():
         a, b = val
         x = np.random.random(n)
         inputs[key] = x * a + (1 - x) * b
 
-    # Constants    
+    # Constants
     if include_constants:
-        inputs.update(vocs['constants'])
+        inputs.update(vocs["constants"])
 
     # Handle linked variables
-    if include_linked_variables and 'linked_variables' in vocs and vocs[
-        'linked_variables']:
-        for k, v in vocs['linked_variables'].items():
+    if (
+        include_linked_variables
+        and "linked_variables" in vocs
+        and vocs["linked_variables"]
+    ):
+        for k, v in vocs["linked_variables"].items():
             inputs[k] = inputs[v]
 
     return inputs

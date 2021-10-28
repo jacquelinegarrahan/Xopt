@@ -20,21 +20,22 @@ logger = logging.getLogger(__name__)
 
 
 def get_corrected_ref(vocs, ref):
-    for key in vocs['objectives']:
+    for key in vocs["objectives"]:
         if vocs["objectives"][key] == "MINIMIZE":
             ref[key] = -ref[key]
     return ref
 
 
-def create_mobo_acqf(model: Model,
-                     ref: torch.Tensor,
-                     n_objectives: int,
-                     n_constraints: int,
-                     sigma: torch.Tensor = None,
-                     sampler=None
-                     ) -> AcquisitionFunction:
+def create_mobo_acqf(
+    model: Model,
+    ref: torch.Tensor,
+    n_objectives: int,
+    n_constraints: int,
+    sigma: torch.Tensor = None,
+    sampler=None,
+) -> AcquisitionFunction:
     train_outputs = model.train_targets.T
-    train_y = train_outputs[:, : n_objectives]
+    train_y = train_outputs[:, :n_objectives]
     train_c = train_outputs[:, n_objectives:]
 
     # compute feasible observations
@@ -64,11 +65,9 @@ def create_mobo_acqf(model: Model,
         ref_point=ref.tolist(),  # use known reference point
         partitioning=partitioning,
         # define an objective that specifies which outcomes are the objectives
-        objective=IdentityMCMultiOutputObjective(
-            outcomes=list(range(n_objectives))
-        ),
+        objective=IdentityMCMultiOutputObjective(outcomes=list(range(n_objectives))),
         constraints=constraint_functions,
-        sampler=sampler
+        sampler=sampler,
     )
 
     # add in proximal biasing

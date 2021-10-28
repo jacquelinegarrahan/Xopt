@@ -31,34 +31,32 @@ from xopt.log import set_handler_with_logger
 
 if __name__ == "__main__":
 
-    logger = logging.getLogger('xopt')
+    logger = logging.getLogger("xopt")
 
     # ARGS = 'xopt.in'.split()
 
-    parser = argparse.ArgumentParser(description='Configure xopt')
-    parser.add_argument('input_file', help='input_file')
+    parser = argparse.ArgumentParser(description="Configure xopt")
+    parser.add_argument("input_file", help="input_file")
 
-    parser.add_argument('--logfile', '-l',
-                        help='Log file to write to')
+    parser.add_argument("--logfile", "-l", help="Log file to write to")
 
-    parser.add_argument('--verbose', '-v', action='count',
-                        help='Show more log output')
+    parser.add_argument("--verbose", "-v", action="count", help="Show more log output")
 
     args = parser.parse_args()
     print(args)
 
     infile = args.input_file
-    assert os.path.exists(infile), f'Input file does not exist: {infile}'
+    assert os.path.exists(infile), f"Input file does not exist: {infile}"
 
-    level = 'WARN'
+    level = "WARN"
     if args.verbose:
         iv = args.verbose
         if iv == 1:
-            level = 'WARN'
+            level = "WARN"
         elif iv == 2:
-            level = 'INFO'
+            level = "INFO"
         elif iv >= 3:
-            level = 'DEBUG'
+            level = "DEBUG"
 
         set_handler_with_logger(level=level)
 
@@ -67,7 +65,7 @@ if __name__ == "__main__":
 
         # logger.info(xopt_logo)
     # logger.info('_________________________________')
-    logger.info(f'Parallel execution with {mpi_size} workers')
+    logger.info(f"Parallel execution with {mpi_size} workers")
 
     X = Xopt(infile)
     # print(X)

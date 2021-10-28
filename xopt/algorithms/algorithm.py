@@ -16,14 +16,16 @@ logger = logging.getLogger(__name__)
 
 
 class Algorithm(ABC):
-    def __init__(self,
-                 vocs: Dict,
-                 evaluator: Evaluator,
-                 generator: Union[Generator, ContinuousGenerator],
-                 output_path: str = '',
-                 restart_file: str = None,
-                 control_flow: str = 'batched',
-                 n_initial_samples: int = 1):
+    def __init__(
+        self,
+        vocs: Dict,
+        evaluator: Evaluator,
+        generator: Union[Generator, ContinuousGenerator],
+        output_path: str = "",
+        restart_file: str = None,
+        control_flow: str = "batched",
+        n_initial_samples: int = 1,
+    ):
         self.vocs = vocs
         self.evaluator = evaluator
         self.generator = generator
@@ -51,20 +53,20 @@ class Algorithm(ABC):
 
         # add data
         if self.data is not None:
-            info.update({'results': json.loads(self.data.to_json())})
+            info.update({"results": json.loads(self.data.to_json())})
 
-        logger.debug('saving data to file')
-        with open(os.path.join(self.output_path, 'results.json'), 'w') as outfile:
+        logger.debug("saving data to file")
+        with open(os.path.join(self.output_path, "results.json"), "w") as outfile:
             json.dump(info, outfile, default=serializable)
 
     def load_data(self, fname):
         """
         load data from file, assumes a data file in json format, looks for `results` key
         """
-        with open(fname, 'r') as infile:
+        with open(fname, "r") as infile:
             data_dict = json.load(infile)
 
-        self.data = pd.DataFrame(data_dict['results'])
+        self.data = pd.DataFrame(data_dict["results"])
 
 
 # define a default json serializer

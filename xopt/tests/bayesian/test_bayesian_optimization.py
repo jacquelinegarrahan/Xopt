@@ -38,4 +38,3 @@ class TestBayesianOptimization:
         # test generalized bayesian optimization from external acquisition function
         X = Xopt(self.config)
         X.run()
-

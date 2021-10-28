@@ -18,14 +18,15 @@ logger = logging.getLogger(__name__)
 
 
 class BayesianGenerator(ContinuousGenerator):
-    def __init__(self,
-                 vocs: Dict,
-                 acquisition_function: Union[Callable, str] = None,
-                 acquisition_options: Dict = None,
-                 optimize_options: Dict = None,
-                 create_model_f: Callable = create_model,
-                 n_steps: int = 1
-                 ):
+    def __init__(
+        self,
+        vocs: Dict,
+        acquisition_function: Union[Callable, str] = None,
+        acquisition_options: Dict = None,
+        optimize_options: Dict = None,
+        create_model_f: Callable = create_model,
+        n_steps: int = 1,
+    ):
         """
         General Bayesian optimization generator
         NOTE: we assume maximization for all acquisition functions
@@ -48,13 +49,14 @@ class BayesianGenerator(ContinuousGenerator):
         # get optimization kwargs defaults
         optimization_defaults = get_function_defaults(optimize_acqf)
 
-        self.optimization_options = check_and_fill_defaults(self.optimization_options,
-                                                            optimization_defaults)
+        self.optimization_options = check_and_fill_defaults(
+            self.optimization_options, optimization_defaults
+        )
 
         self.tkwargs = {"dtype": torch.double, "device": torch.device("cpu")}
 
         # set up gpu if requested
-        use_gpu = self.acquisition_function_options.get('use_gpu', False)
+        use_gpu = self.acquisition_function_options.get("use_gpu", False)
         if use_gpu:
             if torch.cuda.is_available():
                 self.tkwargs["device"] = torch.device("cuda")
@@ -66,7 +68,7 @@ class BayesianGenerator(ContinuousGenerator):
                 logger.warning("gpu requested but not found, using cpu")
 
         # optimize the acquisition function in normalized space
-        self.bounds = torch.zeros(2, len(self.vocs['variables']), **self.tkwargs)
+        self.bounds = torch.zeros(2, len(self.vocs["variables"]), **self.tkwargs)
         self.bounds[1, :] = 1.0
 
         self._data = None
@@ -84,9 +86,9 @@ class BayesianGenerator(ContinuousGenerator):
             )
         return acq_func
 
-    def dataframe_to_torch(self, data: pd.DataFrame,
-                           use_transformed=True,
-                           keys=None) -> Dict:
+    def dataframe_to_torch(
+        self, data: pd.DataFrame, use_transformed=True, keys=None
+    ) -> Dict:
         data = self.dataframe_to_numpy(data, use_transformed, keys)
         for name, val in data.items():
             data[name] = torch.tensor(data[name], **self.tkwargs)
@@ -114,17 +116,17 @@ class BayesianGenerator(ContinuousGenerator):
     def create_model(self, data, use_transformed=True):
         # get valid data from dataframe and convert to torch tensors
         # + do normalization required by bototrch models
-        valid_df = data.loc[data['status'] == 'done']
+        valid_df = data.loc[data["status"] == "done"]
 
         # check to make sure there is some data
         if len(valid_df) == 0:
-            raise RuntimeError('no data to create GP model')
+            raise RuntimeError("no data to create GP model")
 
         if use_transformed:
             train_data = self.dataframe_to_torch(valid_df)
 
             # negate objective values -> bototrch assumes maximization
-            train_data['Y'] = -train_data['Y']
+            train_data["Y"] = -train_data["Y"]
         else:
             train_data = self.dataframe_to_torch(valid_df, False)
 
@@ -134,15 +136,16 @@ class BayesianGenerator(ContinuousGenerator):
     def _optimize_acq(self, acq_func) -> torch.Tensor:
 
         # optimize
-        self.optimization_options['raw_samples'] = self.optimization_options[
-            'raw_samples'] or 512
+        self.optimization_options["raw_samples"] = (
+            self.optimization_options["raw_samples"] or 512
+        )
 
         candidates, _ = optimize_acqf(
             acq_function=acq_func,
             bounds=self.bounds,
             q=self._n_samples,
-            num_restarts=self.optimization_options.get('num_restarts', 20),
-            **self.optimization_options
+            num_restarts=self.optimization_options.get("num_restarts", 20),
+            **self.optimization_options,
         )
 
         return candidates

@@ -18,7 +18,7 @@ def run_continuous(algorithm):
     # create queue
     q = queue.Queue()
 
-    #add random initial samples to queue
+    # add random initial samples to queue
     rs = RandomSample(algorithm.vocs, algorithm.n_initial_samples, 1)
     initial_samples = rs.generate(algorithm.data)
     for idx, sample in initial_samples.iterrows():
@@ -29,20 +29,21 @@ def run_continuous(algorithm):
         # if q is not empty submit samples to executor
         while not q.empty():
             sample = q.get()
-            logger.debug(f'submitted sample {sample.values}')
+            logger.debug(f"submitted sample {sample.values}")
             algorithm.evaluator.submit_samples(sample)
 
         # process done futures
         results, valid = algorithm.evaluator.collect_results(
-            concurrent.futures.FIRST_COMPLETED)
+            concurrent.futures.FIRST_COMPLETED
+        )
         if results is not None:
             # add transformed results to dataframe
             results = algorithm.generator.transform_data(results)
             n_results = len(results)
             if not valid:
                 logger.warning(
-                    'No valid results from measurements, see save file for '
-                    'details')
+                    "No valid results from measurements, see save file for " "details"
+                )
 
             # concatenate results
             if algorithm.data is not None:
@@ -68,8 +69,9 @@ def run_continuous(algorithm):
                         if not algorithm.generator.is_terminated():
                             new_sample = algorithm.generator.generate(algorithm.data)
                             if len(new_sample) != 1:
-                                raise BadDataError('generator must return only one '
-                                                   'sample')
+                                raise BadDataError(
+                                    "generator must return only one " "sample"
+                                )
                             q.put(new_sample)
 
         # end the optimization loop if we have run out of futures
@@ -79,9 +81,3 @@ def run_continuous(algorithm):
             break
 
     return algorithm.data
-
-
-
-
-
-

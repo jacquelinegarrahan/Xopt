@@ -10,10 +10,11 @@ from torch import Tensor
 
 # define classes that combine acquisition functions
 
+
 def split_keys(vocs, nominal_quality_parameters):
     target_x_keys = []
     quality_x_keys = []
-    for key in vocs['variables']:
+    for key in vocs["variables"]:
         quality_x_keys += [key]
         if key not in nominal_quality_parameters:
             target_x_keys += [key]
@@ -30,11 +31,12 @@ class PosteriorUncertainty(botorch.acquisition.analytic.AcquisitionFunction):
 
 
 class QualityAwareExploration(botorch.acquisition.acquisition.AcquisitionFunction):
-    def __init__(self,
-                 model: ModelListGP,
-                 target_parameter_indicies: List,
-                 beta: float = 2.0,
-                 ):
+    def __init__(
+        self,
+        model: ModelListGP,
+        target_parameter_indicies: List,
+        beta: float = 2.0,
+    ):
         """
         Acquisition function to do quality aware optimization. Free parameters are
         divided into two groups, target_parameters and quality_parameters. We assume
@@ -67,8 +69,10 @@ class QualityAwareExploration(botorch.acquisition.acquisition.AcquisitionFunctio
 
         # check to make sure that the target function model has correct input dimensions
         if model.models[0].train_inputs[0].shape[-1] != len(target_parameter_indicies):
-            raise RuntimeError('target model feature dimension does not match the '
-                               'number of target parameters')
+            raise RuntimeError(
+                "target model feature dimension does not match the "
+                "number of target parameters"
+            )
 
         self.target_parameter_indicies = target_parameter_indicies
         self.target_acq = PosteriorUncertainty(model.models[0])

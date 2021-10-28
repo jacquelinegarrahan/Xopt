@@ -42,8 +42,3 @@ class TestCNSGA:
     def test_cnsga_tnk(self):
         X = Xopt(self.config)
         X.run()
-
-    
-    
-
-

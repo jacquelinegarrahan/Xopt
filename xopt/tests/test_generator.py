@@ -5,11 +5,7 @@ import pytest
 
 
 class TestGeneratorBase:
-    vocs = {'variables':
-                {'x1': [0, 1],
-                 'x2': [0, 1]},
-            'objectives':
-                {'y1': 'MINIMIZE'}}
+    vocs = {"variables": {"x1": [0, 1], "x2": [0, 1]}, "objectives": {"y1": "MINIMIZE"}}
 
     def test_generator_base(self):
         def a(vocs):
@@ -39,9 +35,10 @@ class TestGeneratorBase:
         def l(vocs, X, Y):
             return np.random.rand(5, 3)
 
-        data = pd.DataFrame(np.random.rand(5, 3),
-                            columns=list(self.vocs['variables']) +
-                                    list(self.vocs['objectives']))
+        data = pd.DataFrame(
+            np.random.rand(5, 3),
+            columns=list(self.vocs["variables"]) + list(self.vocs["objectives"]),
+        )
 
         for ele in [a, b, c, d, e, f]:
             alg = FunctionalGenerator(self.vocs, ele)

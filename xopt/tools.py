@@ -26,9 +26,13 @@ __  _____  _ __ | |_
 
 
 def isotime():
-    return datetime.datetime.utcnow().replace(
-        tzinfo=datetime.timezone.utc).astimezone().replace(
-        microsecond=0).isoformat()
+    return (
+        datetime.datetime.utcnow()
+        .replace(tzinfo=datetime.timezone.utc)
+        .astimezone()
+        .replace(microsecond=0)
+        .isoformat()
+    )
 
 
 logger = logging.getLogger(__name__)
@@ -37,50 +41,50 @@ logger = logging.getLogger(__name__)
 # --------------------------------
 # Config utilities
 
+
 def load_config(source):
     """
-    Returns a dict loaded from a JSON or YAML file, or string. 
-    
+    Returns a dict loaded from a JSON or YAML file, or string.
+
     If source is already a dict, just returns the same dict.
-    
+
     """
     if isinstance(source, dict):
-        logger.info('Loading config from dict.')
+        logger.info("Loading config from dict.")
         return source
 
     if isinstance(source, str):
         if os.path.exists(source):
-            if source.endswith('.json'):
-                logger.info(f'Loading from JSON file: {source}')
+            if source.endswith(".json"):
+                logger.info(f"Loading from JSON file: {source}")
                 return json.load(open(source))
-            elif source.endswith('.yaml'):
-                logger.info(f'Loading from YAML file: {source}')
+            elif source.endswith(".yaml"):
+                logger.info(f"Loading from YAML file: {source}")
                 return yaml.safe_load(open(source))
             else:
-                logger.error(f'Cannot load file {source}')
+                logger.error(f"Cannot load file {source}")
         else:
-            logger.info('Loading config from text')
+            logger.info("Loading config from text")
             return yaml.safe_load(source)
     else:
-        raise Exception(f'Do not know how to load {source}')
+        raise Exception(f"Do not know how to load {source}")
 
 
 def save_config(data, filename, verbose=True):
     """
-    Saves data to a JSON or YAML file, chosen by the filename extension.  
-    
+    Saves data to a JSON or YAML file, chosen by the filename extension.
+
     """
-    if filename.endswith('json'):
-        with open(filename, 'w') as f:
-            json.dump(data, f, ensure_ascii=True, indent='  ',
-                      cls=NpEncoder)
+    if filename.endswith("json"):
+        with open(filename, "w") as f:
+            json.dump(data, f, ensure_ascii=True, indent="  ", cls=NpEncoder)
         if verbose:
-            logger.info(f'Config written as JSON to {filename}')
-    elif filename.endswith('yaml'):
-        with open(filename, 'w') as f:
+            logger.info(f"Config written as JSON to {filename}")
+    elif filename.endswith("yaml"):
+        with open(filename, "w") as f:
             yaml.dump(data, f, default_flow_style=None, sort_keys=False)
         if verbose:
-            logger.info(f'Config written as YAML to {filename}')
+            logger.info(f"Config written as YAML to {filename}")
     else:
         raise
 
@@ -89,17 +93,17 @@ def save_config(data, filename, verbose=True):
 # VOCS utilities
 def save_vocs(vocs_dict, filePath=None):
     """
-    Write VOCS dictionary to a JSON file. 
+    Write VOCS dictionary to a JSON file.
     If no filePath is given, the name is chosen from the 'name' key + '.json'
     """
 
     if filePath:
         name = filePath
     else:
-        name = vocs_dict['name'] + '.json'
-    with open(name, 'w') as outfile:
-        json.dump(vocs_dict, outfile, ensure_ascii=True, indent='  ')
-    logger.info(name, 'written')
+        name = vocs_dict["name"] + ".json"
+    with open(name, "w") as outfile:
+        json.dump(vocs_dict, outfile, ensure_ascii=True, indent="  ")
+    logger.info(name, "written")
 
 
 def load_vocs(filePath):
@@ -107,7 +111,7 @@ def load_vocs(filePath):
     Load VOCS from a JSON file
     Returns a dict
     """
-    with open(filePath, 'r') as f:
+    with open(filePath, "r") as f:
         dat = json.load(f)
     return dat
 
@@ -115,55 +119,62 @@ def load_vocs(filePath):
 def random_settings(vocs, include_constants=True, include_linked_variables=True):
     """
     Uniform sampling of the variables described in vocs['variables'] = min, max.
-    Returns a dict of settings. 
-    If include_constants, the vocs['constants'] are added to the dict. 
-    
+    Returns a dict of settings.
+    If include_constants, the vocs['constants'] are added to the dict.
+
     """
     settings = {}
-    for key, val in vocs['variables'].items():
+    for key, val in vocs["variables"].items():
         a, b = val
         x = np.random.random()
         settings[key] = x * a + (1 - x) * b
 
-    # Constants    
-    if include_constants and vocs['constants']:
-        settings.update(vocs['constants'])
+    # Constants
+    if include_constants and vocs["constants"]:
+        settings.update(vocs["constants"])
 
     # Handle linked variables
-    if include_linked_variables and 'linked_variables' in vocs and vocs[
-        'linked_variables']:
-        for k, v in vocs['linked_variables'].items():
+    if (
+        include_linked_variables
+        and "linked_variables" in vocs
+        and vocs["linked_variables"]
+    ):
+        for k, v in vocs["linked_variables"].items():
             settings[k] = settings[v]
 
     return settings
 
 
-def random_settings_arrays(vocs, n, include_constants=True,
-                           include_linked_variables=True):
+def random_settings_arrays(
+    vocs, n, include_constants=True, include_linked_variables=True
+):
     """
-    Similar to random_settings, but with arrays of size n. 
-    
+    Similar to random_settings, but with arrays of size n.
+
     Uniform sampling of the variables described in vocs['variables'] = min, max.
-    Returns a dict of settings, with each settings as an array. 
+    Returns a dict of settings, with each settings as an array.
 
     If include_constants, the vocs['constants'] are added to the dict as full arrays.
-    
+
     """
     settings = {}
-    for key, val in vocs['variables'].items():
+    for key, val in vocs["variables"].items():
         a, b = val
         x = np.random.random(n)
         settings[key] = x * a + (1 - x) * b
 
-    # Constants    
-    if include_constants and 'constants' in vocs and vocs['constants']:
-        for k, v in vocs['constants'].items():
+    # Constants
+    if include_constants and "constants" in vocs and vocs["constants"]:
+        for k, v in vocs["constants"].items():
             settings[k] = np.full(n, v)
 
     # Handle linked variables
-    if include_linked_variables and 'linked_variables' in vocs and vocs[
-        'linked_variables']:
-        for k, v in vocs['linked_variables'].items():
+    if (
+        include_linked_variables
+        and "linked_variables" in vocs
+        and vocs["linked_variables"]
+    ):
+        for k, v in vocs["linked_variables"].items():
             settings[k] = np.full(n, settings[v])
 
     return settings
@@ -185,14 +196,15 @@ def encode1(d, labels):
 # --------------------------------
 # Paths
 
+
 def full_path(path, ensure_exists=True):
     """
-    Makes path abolute. Can ensure exists. 
+    Makes path abolute. Can ensure exists.
     """
     p = os.path.expandvars(path)
     p = os.path.abspath(p)
     if ensure_exists:
-        assert os.path.exists(p), 'path does not exist: ' + p
+        assert os.path.exists(p), "path does not exist: " + p
     return p
 
 
@@ -203,21 +215,26 @@ def add_to_path(path, prepend=True):
     p = full_path(path)
 
     if prepend:
-        os.environ['PATH'] = p + os.pathsep + os.environ['PATH']
+        os.environ["PATH"] = p + os.pathsep + os.environ["PATH"]
     else:
         # just append
-        os.environ['PATH'] += os.pathsep + p
+        os.environ["PATH"] += os.pathsep + p
     return p
 
 
-def expand_paths(nested_dict, suffixes=['_file', '_path', '_bin'], verbose=True,
-                 sep=' : ', ensure_exists=False):
+def expand_paths(
+    nested_dict,
+    suffixes=["_file", "_path", "_bin"],
+    verbose=True,
+    sep=" : ",
+    ensure_exists=False,
+):
     """
-    Crawls through a nested dict and expands the path of any key that ends 
-    with characters in the suffixes list. 
+    Crawls through a nested dict and expands the path of any key that ends
+    with characters in the suffixes list.
 
     Internally flattens, and unflattens a dict to this using a seperator string sep
-    
+
     """
     d = flatten_dict(nested_dict, sep=sep)
 
@@ -231,7 +248,7 @@ def expand_paths(nested_dict, suffixes=['_file', '_path', '_bin'], verbose=True,
         if any([k2.endswith(x) for x in suffixes]):
             if not v:
                 if verbose:
-                    logger.warning(f'Warning: No path set for key {k}')
+                    logger.warning(f"Warning: No path set for key {k}")
                 continue
             if not isinstance(v, str):
                 # Not a path
@@ -242,27 +259,27 @@ def expand_paths(nested_dict, suffixes=['_file', '_path', '_bin'], verbose=True,
                 d[k] = file
             else:
                 if verbose:
-                    logger.warning(f'Warning: Path {v} does not exist for key {k}')
+                    logger.warning(f"Warning: Path {v} does not exist for key {k}")
 
     return unflatten_dict(d, sep=sep)
 
 
 # --------------------------------
 # filenames
-def new_date_filename(prefix='', suffix='.json', path=''):
+def new_date_filename(prefix="", suffix=".json", path=""):
     """
     Gets a filename that doesn't exist based on the date
-    
-    
-    Example: 
+
+
+    Example:
         new_date_filename('sample-', '.json', '.')
     Returns:
         './sample-2020-02-09-1.json'
-    
+
     """
     counter = 1
     while True:
-        name = f'{prefix}{date.today()}-{counter}{suffix}'
+        name = f"{prefix}{date.today()}-{counter}{suffix}"
         file = os.path.join(path, name)
         if os.path.exists(file):
             counter += 1
@@ -273,6 +290,7 @@ def new_date_filename(prefix='', suffix='.json', path=''):
 
 # --------------------------------
 # h5 utils
+
 
 def write_attrs(h5, group_name, data):
     """
@@ -317,9 +335,9 @@ class NpEncoder(json.JSONEncoder):
 
 def fingerprint(keyed_data, digest_size=16):
     """
-    Creates a cryptographic fingerprint from keyed data. 
+    Creates a cryptographic fingerprint from keyed data.
     Used JSON dumps to form strings, and the blake2b generator to hash.
-    
+
     """
     h = blake2b(digest_size=16)
     for key in keyed_data:
@@ -332,33 +350,39 @@ def fingerprint(keyed_data, digest_size=16):
 # --------------------------------
 # nested dict flattening, unflattening
 
-def flatten_dict(dd, sep=':', prefix=''):
+
+def flatten_dict(dd, sep=":", prefix=""):
     """
     Flattens a nested dict into a single dict, with keys concatenated with sep.
-    
+
     Similar to pandas.io.json.json_normalize
-    
+
     Example:
         A dict of dicts:
             dd = {'a':{'x':1}, 'b':{'d':{'y':3}}}
             flatten_dict(dd, prefix='Z')
         Returns: {'Z:a:x': 1, 'Z:b:d:y': 3}
-    
+
     """
-    return {prefix + sep + k if prefix else k: v
+    return (
+        {
+            prefix + sep + k if prefix else k: v
             for kk, vv in dd.items()
             for k, v in flatten_dict(vv, sep, kk).items()
-            } if (dd and isinstance(dd, dict)) else {prefix: dd}  # handles empty dicts
+        }
+        if (dd and isinstance(dd, dict))
+        else {prefix: dd}
+    )  # handles empty dicts
 
 
-def unflatten_dict(d, sep=':', prefix=''):
+def unflatten_dict(d, sep=":", prefix=""):
     """
     Inverse of flatten_dict. Forms a nested dict.
     """
     dd = {}
     for kk, vv in d.items():
         if kk.startswith(prefix + sep):
-            kk = kk[len(prefix + sep):]
+            kk = kk[len(prefix + sep) :]
 
         klist = kk.split(sep)
         d1 = dd
@@ -380,9 +404,9 @@ def update_nested_dict(d, settings, verbose=False):
     for key, value in settings.items():
         if verbose:
             if key in flat_params:
-                logger.info(f'Replacing param {key} with value {value}')
+                logger.info(f"Replacing param {key} with value {value}")
             else:
-                logger.info(f'New param {key} with value {value}')
+                logger.info(f"New param {key} with value {value}")
         flat_params[key] = value
 
     new_dict = unflatten_dict(flat_params)
@@ -404,21 +428,21 @@ def get_function(name):
         return name
 
     if not isinstance(name, str):
-        raise ValueError(f'{name} must be callable or a string.')
+        raise ValueError(f"{name} must be callable or a string.")
 
     if name in globals():
         if callable(globals()[name]):
             f = globals()[name]
         else:
-            raise ValueError(f'global {name} is not callable')
+            raise ValueError(f"global {name} is not callable")
     else:
-        if '.' in name:
+        if "." in name:
             # try to import
-            m_name, f_name = name.rsplit('.', 1)
+            m_name, f_name = name.rsplit(".", 1)
             module = importlib.import_module(m_name)
             f = getattr(module, f_name)
         else:
-            raise Exception(f'function {name} does not exist')
+            raise Exception(f"function {name} does not exist")
 
     return f
 
@@ -426,7 +450,7 @@ def get_function(name):
 def get_function_defaults(f):
     """
     Returns a dict of the non-empty POSITIONAL_OR_KEYWORD arguments.
-    
+
     See the `inspect` documentation for detauls.
     """
     defaults = {}
@@ -444,8 +468,9 @@ def get_n_required_fuction_arguments(f):
     """
     n = 0
     for k, v in inspect.signature(f).parameters.items():
-        if (v.kind == inspect.Parameter.POSITIONAL_OR_KEYWORD
-                and v.default == inspect.Parameter.empty):
+        if (
+            v.kind == inspect.Parameter.POSITIONAL_OR_KEYWORD
+            and v.default == inspect.Parameter.empty
+        ):
             n += 1
     return n
-

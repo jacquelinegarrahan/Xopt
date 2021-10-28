@@ -6,40 +6,41 @@ import logging
 
 logger = logging.getLogger(__name__)
 VOCS = {
-    'name': '1D test',
-    'description': '1D test function (with optional multi-fidelity) for debugging',
-    'variables': {
-        'x1': [0, 1.0],
-        'x2': [0, 1.0],
-        'x3': [0, 1.0],
+    "name": "1D test",
+    "description": "1D test function (with optional multi-fidelity) for debugging",
+    "variables": {
+        "x1": [0, 1.0],
+        "x2": [0, 1.0],
+        "x3": [0, 1.0],
     },
-    'objectives': {
-        'y1': 'MINIMIZE',
-
+    "objectives": {
+        "y1": "MINIMIZE",
     },
-    'constraints': {},
-    'constants': {}
+    "constraints": {},
+    "constants": {},
 }
 
 
 # labeled version
-def evaluate(inputs, extra_option='abc', **params):
-    x = np.array((inputs['x1'], inputs['x2'], inputs['x3']))
-    outputs = {'y1': np.linalg.norm(x - 0.5*np.ones(3))**2}
+def evaluate(inputs, extra_option="abc", **params):
+    x = np.array((inputs["x1"], inputs["x2"], inputs["x3"]))
+    outputs = {"y1": np.linalg.norm(x - 0.5 * np.ones(3)) ** 2}
 
     # raise random exceptions
     if np.random.rand() > 0.5:
-        raise Exception('test exception raised')
+        raise Exception("test exception raised")
 
     return outputs
 
 
-if __name__ == '__main__':
-    input = {'x1': 0.208,
-             'x2': 0.164,
-             'x3': 0.514,
-             'x4': 0.280,
-             'x5': 0.301,
-             'x6': 0.664,
-             'cost': 1.000}
+if __name__ == "__main__":
+    input = {
+        "x1": 0.208,
+        "x2": 0.164,
+        "x3": 0.514,
+        "x4": 0.280,
+        "x5": 0.301,
+        "x6": 0.664,
+        "cost": 1.000,
+    }
     print(evaluate(input))

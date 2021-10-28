@@ -5,11 +5,11 @@ from .algorithm import Algorithm
 
 
 def run_algortihm(
-        vocs: Dict,
-        generator: Union[Generator, ContinuousGenerator],
-        function: Callable = None,
-        evaluator: Evaluator = None,
-        **kwargs,
+    vocs: Dict,
+    generator: Union[Generator, ContinuousGenerator],
+    function: Callable = None,
+    evaluator: Evaluator = None,
+    **kwargs,
 ):
     """
     run algorithm in functional mode, for use in scripting in python
@@ -23,7 +23,7 @@ def run_algortihm(
     elif evaluator is not None and function is None:
         pass
     else:
-        raise ValueError('must either specify evaluator or callable function')
+        raise ValueError("must either specify evaluator or callable function")
 
     # create algorithm arguments
     alg_config = {}
@@ -34,5 +34,3 @@ def run_algortihm(
     alg.run()
 
     return alg
-
-

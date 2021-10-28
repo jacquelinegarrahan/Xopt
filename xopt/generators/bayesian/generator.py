@@ -26,30 +26,34 @@ logger = logging.getLogger(__name__)
 class UpperConfidenceBound(BayesianGenerator):
     def __init__(self, vocs, n_steps=1, batch_size=1, beta=2.0, **kwargs):
         # need to specify a scalarized Objective to specify which index is the objective
-        if len(vocs['objectives']) != 1:
-            raise ValueError('cannot use UCB when multiple objectives are present')
-        if len(vocs['constraints']) != 0:
-            raise ValueError('cannot use UCB with constraints...yet')
+        if len(vocs["objectives"]) != 1:
+            raise ValueError("cannot use UCB when multiple objectives are present")
+        if len(vocs["constraints"]) != 0:
+            raise ValueError("cannot use UCB with constraints...yet")
 
         optimize_options = kwargs
         self.n_steps = n_steps
-        super(UpperConfidenceBound, self).__init__(vocs,
-                                                   qUpperConfidenceBound,
-                                                   {'beta': beta},
-                                                   optimize_options,
-                                                   n_steps=n_steps)
+        super(UpperConfidenceBound, self).__init__(
+            vocs,
+            qUpperConfidenceBound,
+            {"beta": beta},
+            optimize_options,
+            n_steps=n_steps,
+        )
         self.set_n_samples(batch_size)
 
 
 class QualityAware(BayesianGenerator):
-    def __init__(self,
-                 vocs,
-                 target_observation: str = None,
-                 quality_observation: str = None,
-                 nominal_quality_parameters: Dict = None,
-                 n_steps=1,
-                 beta=2.0,
-                 **kwargs):
+    def __init__(
+        self,
+        vocs,
+        target_observation: str = None,
+        quality_observation: str = None,
+        nominal_quality_parameters: Dict = None,
+        n_steps=1,
+        beta=2.0,
+        **kwargs
+    ):
         optimize_options = kwargs
         self.n_steps = n_steps
         self.target_observation = target_observation
@@ -58,17 +62,21 @@ class QualityAware(BayesianGenerator):
 
         target_x_keys, _ = split_keys(vocs, nominal_quality_parameters)
 
-        target_parameter_indicies = [list(vocs['variables']).index(ele) for ele in
-                                     target_x_keys]
-        acquisition_function_options = \
-            {'beta': beta,
-             'target_parameter_indicies': target_parameter_indicies, }
+        target_parameter_indicies = [
+            list(vocs["variables"]).index(ele) for ele in target_x_keys
+        ]
+        acquisition_function_options = {
+            "beta": beta,
+            "target_parameter_indicies": target_parameter_indicies,
+        }
 
-        super(QualityAware, self).__init__(vocs,
-                                           QualityAwareExploration,
-                                           acquisition_function_options,
-                                           optimize_options,
-                                           n_steps=n_steps)
+        super(QualityAware, self).__init__(
+            vocs,
+            QualityAwareExploration,
+            acquisition_function_options,
+            optimize_options,
+            n_steps=n_steps,
+        )
 
     def transform_data(self, data: pd.DataFrame) -> pd.DataFrame:
         """
@@ -81,31 +89,36 @@ class QualityAware(BayesianGenerator):
         # overwrite objective transformations to normalize w.r.t. ref point
         for key in new_df.keys():
             if key == self.quality_observation:
-                scale = -1.0 if self.vocs['objectives'][key] == 'MINIMIZE' else 1.0
-                new_df[key + '_t'] = \
-                    scale * (new_df[key] - new_df[key].min()) / (new_df[key].max() -
-                                                                 new_df[key].min())
+                scale = -1.0 if self.vocs["objectives"][key] == "MINIMIZE" else 1.0
+                new_df[key + "_t"] = (
+                    scale
+                    * (new_df[key] - new_df[key].min())
+                    / (new_df[key].max() - new_df[key].min())
+                )
 
         return new_df
 
     def create_model(self, data, use_transformed=True):
-        valid_df = data.loc[data['status'] == 'done']
+        valid_df = data.loc[data["status"] == "done"]
 
         # check to make sure there is some data
         if len(valid_df) == 0:
-            raise RuntimeError('no data to create GP model')
+            raise RuntimeError("no data to create GP model")
 
         # split data into sets for training independent GP's, one for quality and one
         # for target
-        target_x_keys, quality_x_keys = split_keys(self.vocs,
-                                                   self.nominal_quality_parameters)
+        target_x_keys, quality_x_keys = split_keys(
+            self.vocs, self.nominal_quality_parameters
+        )
 
-        #create models
+        # create models
         models = []
-        for keys, obs in zip([target_x_keys, quality_x_keys],
-                             [self.target_observation, self.quality_observation]):
+        for keys, obs in zip(
+            [target_x_keys, quality_x_keys],
+            [self.target_observation, self.quality_observation],
+        ):
 
-            data_keys = {'X': keys, 'Y': [obs]}
+            data_keys = {"X": keys, "Y": [obs]}
 
             # get data to train models
             train_data = self.dataframe_to_torch(data, use_transformed, data_keys)
@@ -116,40 +129,54 @@ class QualityAware(BayesianGenerator):
 
 
 class ExpectedHypervolumeImprovement(BayesianGenerator):
-    def __init__(self, vocs, ref=None, n_steps=1, batch_size=1, sigma=None,
-                 mc_samples=1024, **kwargs):
+    def __init__(
+        self,
+        vocs,
+        ref=None,
+        n_steps=1,
+        batch_size=1,
+        sigma=None,
+        mc_samples=1024,
+        **kwargs
+    ):
         acq = create_mobo_acqf
         optimize_options = kwargs
-        optimize_options.update({'options':
-                                     {"batch_limit": 5, "maxiter": 200,
-                                      "nonnegative": True},
-                                 'sequential': True, })
-        super(ExpectedHypervolumeImprovement, self).__init__(vocs, acq,
-                                                             {}, optimize_options,
-                                                             n_steps=n_steps)
+        optimize_options.update(
+            {
+                "options": {"batch_limit": 5, "maxiter": 200, "nonnegative": True},
+                "sequential": True,
+            }
+        )
+        super(ExpectedHypervolumeImprovement, self).__init__(
+            vocs, acq, {}, optimize_options, n_steps=n_steps
+        )
         self.sampler = SobolQMCNormalSampler(num_samples=mc_samples)
         if ref is not None:
-            if list(ref) == list(self.vocs['objectives']):
+            if list(ref) == list(self.vocs["objectives"]):
                 ref = get_corrected_ref(self.vocs, ref)
             else:
-                raise ValueError('reference point does not correctly correspond to '
-                                 'objectives in vocs')
+                raise ValueError(
+                    "reference point does not correctly correspond to "
+                    "objectives in vocs"
+                )
         else:
-            raise ValueError('need to specify a reference point')
+            raise ValueError("need to specify a reference point")
         self.ref = ref
         ref_tensor = torch.tensor([self.ref[key] for key in self.ref], **self.tkwargs)
 
         if batch_size != 1 and sigma is not None:
-            raise ValueError('cannot use multi-batch with proximal biasing')
+            raise ValueError("cannot use multi-batch with proximal biasing")
 
         if sigma is not None:
             sigma = torch.tensor(sigma, **self.tkwargs)
 
-        self.acquisition_function_options = {'ref': ref_tensor,
-                                             'n_objectives': len(vocs['objectives']),
-                                             'n_constraints': len(vocs['constraints']),
-                                             'sigma': sigma,
-                                             'sampler': self.sampler}
+        self.acquisition_function_options = {
+            "ref": ref_tensor,
+            "n_objectives": len(vocs["objectives"]),
+            "n_constraints": len(vocs["constraints"]),
+            "sigma": sigma,
+            "sampler": self.sampler,
+        }
         self._n_samples = batch_size
 
     def transform_data(self, data: pd.DataFrame) -> pd.DataFrame:
@@ -162,82 +189,95 @@ class ExpectedHypervolumeImprovement(BayesianGenerator):
 
         # overwrite objective transformations to normalize w.r.t. ref point
         for key in new_df.keys():
-            if key in self.vocs['objectives']:
-                if self.vocs['objectives'][key] == 'MINIMIZE':
-                    new_df[key + '_t'] = -new_df[key] / self.ref[key]
+            if key in self.vocs["objectives"]:
+                if self.vocs["objectives"][key] == "MINIMIZE":
+                    new_df[key + "_t"] = -new_df[key] / self.ref[key]
                 else:
-                    new_df[key + '_t'] = new_df[key] / self.ref[key]
+                    new_df[key + "_t"] = new_df[key] / self.ref[key]
 
         return new_df
 
 
 class BayesianExploration(BayesianGenerator):
-    def __init__(self, vocs, n_steps=1, batch_size=1, sigma=None,
-                 mc_samples=1024, **kwargs):
+    def __init__(
+        self, vocs, n_steps=1, batch_size=1, sigma=None, mc_samples=1024, **kwargs
+    ):
         acq = create_bayes_exp_acq
         optimize_options = kwargs
-        optimize_options.update({'options':
-                                     {"batch_limit": 5, "maxiter": 200,
-                                      "nonnegative": True},
-                                 'sequential': True, })
+        optimize_options.update(
+            {
+                "options": {"batch_limit": 5, "maxiter": 200, "nonnegative": True},
+                "sequential": True,
+            }
+        )
 
-        super(BayesianExploration, self).__init__(vocs, acq, {}, optimize_options,
-                                                  n_steps=n_steps)
+        super(BayesianExploration, self).__init__(
+            vocs, acq, {}, optimize_options, n_steps=n_steps
+        )
 
         self.sampler = SobolQMCNormalSampler(num_samples=mc_samples)
 
         if batch_size != 1 and sigma is not None:
-            raise ValueError('cannot use multi-batch with proximal biasing')
+            raise ValueError("cannot use multi-batch with proximal biasing")
 
         if sigma is not None:
             sigma = torch.tensor(sigma, **self.tkwargs)
         else:
-            sigma = torch.ones(len(self.vocs['variables']), **self.tkwargs) * 1e10
+            sigma = torch.ones(len(self.vocs["variables"]), **self.tkwargs) * 1e10
 
-        self.acquisition_function_options = {'n_constraints': len(vocs['constraints']),
-                                             'n_variables': len(self.vocs['variables']),
-                                             'sigma': sigma,
-                                             'sampler': self.sampler,
-                                             'q': batch_size}
+        self.acquisition_function_options = {
+            "n_constraints": len(vocs["constraints"]),
+            "n_variables": len(self.vocs["variables"]),
+            "sigma": sigma,
+            "sampler": self.sampler,
+            "q": batch_size,
+        }
         self.set_n_samples(batch_size)
 
 
 class MultiFidelity(BayesianGenerator):
-    def __init__(self,
-                 vocs,
-                 budget=1,
-                 batch_size=1,
-                 fixed_cost=0.01,
-                 num_restarts: int = 25,
-                 raw_samples: int = 1024,
-                 num_fantasies: int = 128,
-                 **kwargs) -> None:
+    def __init__(
+        self,
+        vocs,
+        budget=1,
+        batch_size=1,
+        fixed_cost=0.01,
+        num_restarts: int = 25,
+        raw_samples: int = 1024,
+        num_fantasies: int = 128,
+        **kwargs
+    ) -> None:
 
         # need to specify a scalarized Objective to specify which index is the objective
-        if len(vocs['objectives']) != 1:
-            raise ValueError('cannot use multi-fidelity BO when multiple objectives '
-                             'are present')
-        if 'cost' not in vocs['variables']:
-            raise ValueError('multi-fidelity requires a `cost` variable in vocs')
-        if vocs['variables']['cost'] != [0, 1]:
-            raise RuntimeWarning('cost not normalized to [0, 1] range, proceed with '
-                                 'caution')
+        if len(vocs["objectives"]) != 1:
+            raise ValueError(
+                "cannot use multi-fidelity BO when multiple objectives " "are present"
+            )
+        if "cost" not in vocs["variables"]:
+            raise ValueError("multi-fidelity requires a `cost` variable in vocs")
+        if vocs["variables"]["cost"] != [0, 1]:
+            raise RuntimeWarning(
+                "cost not normalized to [0, 1] range, proceed with " "caution"
+            )
 
-        optimization_options = {"raw_samples": raw_samples,
-                                'options': {"batch_limit": 10, "maxiter": 200}
-                                }
+        optimization_options = {
+            "raw_samples": raw_samples,
+            "options": {"batch_limit": 10, "maxiter": 200},
+        }
 
-        super(MultiFidelity, self).__init__(vocs,
-                                            None,
-                                            {},
-                                            optimization_options,
-                                            create_model_f=create_multi_fidelity_model)
+        super(MultiFidelity, self).__init__(
+            vocs,
+            None,
+            {},
+            optimization_options,
+            create_model_f=create_multi_fidelity_model,
+        )
         self.budget = budget
 
         # construct target fidelities dict
         tf = {}
-        for idx, name in enumerate(vocs['variables']):
-            if name == 'cost':
+        for idx, name in enumerate(vocs["variables"]):
+            if name == "cost":
                 tf[idx] = 1.0
         self.target_fidelities = tf
         self.fixed_cost = fixed_cost
@@ -248,17 +288,20 @@ class MultiFidelity(BayesianGenerator):
 
     def get_acqf(self, model, **kwargs) -> torch.Tensor:
 
-        cost_model = AffineFidelityCostModel(fidelity_weights=self.target_fidelities,
-                                             fixed_cost=self.fixed_cost)
+        cost_model = AffineFidelityCostModel(
+            fidelity_weights=self.target_fidelities, fixed_cost=self.fixed_cost
+        )
         cost_aware_utility = InverseCostWeightedUtility(cost_model=cost_model)
 
-        mfkg_acqf = get_mfkg(model,
-                             self.bounds,
-                             cost_aware_utility,
-                             self.num_restarts,
-                             self.optimization_options,
-                             len(self.vocs['variables']),
-                             self.target_fidelities)
+        mfkg_acqf = get_mfkg(
+            model,
+            self.bounds,
+            cost_aware_utility,
+            self.num_restarts,
+            self.optimization_options,
+            len(self.vocs["variables"]),
+            self.target_fidelities,
+        )
 
         return mfkg_acqf
 
@@ -268,14 +311,14 @@ class MultiFidelity(BayesianGenerator):
             bounds=self.bounds,
             q=self._n_samples,
             num_restarts=self.num_restarts,
-            raw_samples=self.optimization_options['raw_samples']
+            raw_samples=self.optimization_options["raw_samples"],
         )
 
     def _optimize_acq(self, acq_func) -> torch.Tensor:
         X_init = self.get_one_shot_kg_initial_conditions(acq_func)
 
         oo_copy = deepcopy(self.optimization_options)
-        oo_copy.update({'batch_initial_conditions': X_init})
+        oo_copy.update({"batch_initial_conditions": X_init})
         candidates, _ = optimize_acqf(
             acq_function=acq_func,
             bounds=self.bounds,
@@ -287,12 +330,14 @@ class MultiFidelity(BayesianGenerator):
 
     def get_recommendation(self, data):
         model = self.create_model(data)
-        result = get_recommendation(model,
-                                    len(self.vocs['variables']),
-                                    self.target_fidelities,
-                                    self.tkwargs,
-                                    self.num_restarts,
-                                    self.optimization_options)
+        result = get_recommendation(
+            model,
+            len(self.vocs["variables"]),
+            self.target_fidelities,
+            self.tkwargs,
+            self.num_restarts,
+            self.optimization_options,
+        )
 
         result = result.detach().cpu().numpy()
         return untransform_x(self.numpy_to_dataframe(result), self.vocs)
@@ -300,6 +345,6 @@ class MultiFidelity(BayesianGenerator):
     def is_terminated(self):
         # calculate total cost and compare to budget
         if self._data is not None:
-            return (self._data['cost'] + self.fixed_cost).sum() > self.budget
+            return (self._data["cost"] + self.fixed_cost).sum() > self.budget
         else:
             return False

@@ -1,6 +1,9 @@
 import torch
-from botorch.acquisition import MCAcquisitionFunction, AnalyticAcquisitionFunction, \
-    GenericMCObjective
+from botorch.acquisition import (
+    MCAcquisitionFunction,
+    AnalyticAcquisitionFunction,
+    GenericMCObjective,
+)
 from botorch.acquisition.analytic import _construct_dist
 from botorch.utils.objective import apply_constraints_nonnegative_soft
 from botorch.utils.transforms import (
@@ -14,12 +17,14 @@ from typing import Dict
 from ..acquisition.proximal import ProximalAcquisitionFunction
 
 
-def create_bayes_exp_acq(model,
-                         n_variables: int,
-                         n_constraints: int,
-                         sigma: torch.Tensor = None,
-                         sampler=None,
-                         q: int = 1):
+def create_bayes_exp_acq(
+    model,
+    n_variables: int,
+    n_constraints: int,
+    sigma: torch.Tensor = None,
+    sampler=None,
+    q: int = 1,
+):
     """
     Optimize Bayesian Exploration
 
@@ -30,7 +35,7 @@ def create_bayes_exp_acq(model,
     """
 
     # serialized Bayesian Exploration
-    #if q == 1:
+    # if q == 1:
     #    if sigma.shape[0] != n_variables:
     #        raise ValueError('proximal sigma does not match vocs')
 
@@ -42,7 +47,7 @@ def create_bayes_exp_acq(model,
     #    acq_func = BayesianExploration(model, 0, constraint_dict, sigma)
 
     # batched Bayesian Exploration
-    #else:
+    # else:
     mc_obj = GenericMCObjective(lambda Z, X: Z[..., 0])
 
     # define constraint functions - note issues with lambda implementation
@@ -234,7 +239,7 @@ class BayesianExploration(AnalyticAcquisitionFunction):
 
 class qBayesianExploration(MCAcquisitionFunction):
     def __init__(
-            self, model, sampler=None, objective=None, X_pending=None, constraints=None
+        self, model, sampler=None, objective=None, X_pending=None, constraints=None
     ):
         super(qBayesianExploration, self).__init__(model, sampler, objective, X_pending)
         self.constraints = constraints

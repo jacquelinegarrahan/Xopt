@@ -11,7 +11,7 @@ class TestFunctional:
         vocs = TNK.VOCS
 
         # technically this is not necessary, but its good to be explict
-        vocs['objectives'] = {'y1': None}
+        vocs["objectives"] = {"y1": None}
 
         # Get evaluate function
         EVALUATE = TNK.evaluate_TNK

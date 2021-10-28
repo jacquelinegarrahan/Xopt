@@ -30,17 +30,20 @@ class Generator(ABC):
         # run checks
         if isinstance(samples, pd.DataFrame):
             # check to make sure output has correct values according to vocs
-            if list(samples.keys()) != list(self.vocs['variables']):
-                raise BadDataError('generator function does not have the correct '
-                                   'columns')
+            if list(samples.keys()) != list(self.vocs["variables"]):
+                raise BadDataError(
+                    "generator function does not have the correct " "columns"
+                )
 
             # if n_samples is greater than zero make sure that the generate function
             # returns the correct number of samples
             if self._n_samples > 1 and (len(samples) != self._n_samples):
-                raise BadDataError('generator function did not return the requested '
-                                   'number of samples')
+                raise BadDataError(
+                    "generator function did not return the requested "
+                    "number of samples"
+                )
         else:
-            raise TypeError('generator function needs to return a dataframe object')
+            raise TypeError("generator function needs to return a dataframe object")
 
         self.n_calls += 1
         return samples
@@ -76,28 +79,29 @@ class Generator(ABC):
         check_dataframe(data, self.vocs)
         return transform_data(data, self.vocs)
 
-    def dataframe_to_numpy(self, data: pd.DataFrame,
-                           use_transformed=True,
-                           keys=None) -> Dict:
+    def dataframe_to_numpy(
+        self, data: pd.DataFrame, use_transformed=True, keys=None
+    ) -> Dict:
 
         check_dataframe(data, self.vocs)
         output = {}
         if keys is None:
-            keys = {'X': self.vocs['variables'],
-                    'Y': self.vocs['objectives'],
-                    'C': self.vocs.get('constraints', None),
-                    }
+            keys = {
+                "X": self.vocs["variables"],
+                "Y": self.vocs["objectives"],
+                "C": self.vocs.get("constraints", None),
+            }
 
         for key, value in keys.items():
             if value is not None:
                 if use_transformed:
-                    output[key] = data[[ele + '_t' for ele in value]].to_numpy()
+                    output[key] = data[[ele + "_t" for ele in value]].to_numpy()
                 else:
                     output[key] = data[value].to_numpy()
         return output
 
     def numpy_to_dataframe(self, X):
-        return pd.DataFrame(X, columns=self.vocs['variables'])
+        return pd.DataFrame(X, columns=self.vocs["variables"])
 
 
 class ContinuousGenerator(Generator, ABC):
@@ -120,12 +124,7 @@ class FunctionalGenerator(Generator):
     terminates when the number of max calls is exceeded.
     """
 
-    def __init__(self,
-                 vocs: Dict,
-                 function: Callable,
-                 max_calls: int = 1,
-                 **kwargs
-                 ):
+    def __init__(self, vocs: Dict, function: Callable, max_calls: int = 1, **kwargs):
         self.function = function
         self.max_calls = max_calls
         self.function_options = kwargs
@@ -140,43 +139,50 @@ class FunctionalGenerator(Generator):
             if ele.kind == ele.POSITIONAL_OR_KEYWORD and ele.default is ele.empty:
                 sig_pos_parameters += [name]
 
-        if sig_pos_parameters == ['vocs']:
+        if sig_pos_parameters == ["vocs"]:
             results = self.function(self.vocs, **self.function_options)
-        elif sig_pos_parameters == ['vocs', 'data']:
+        elif sig_pos_parameters == ["vocs", "data"]:
             results = self.function(self.vocs, data, **self.function_options)
-        elif sig_pos_parameters == ['vocs', 'X', 'Y']:
+        elif sig_pos_parameters == ["vocs", "X", "Y"]:
             # convert pandas dataframe to numpy
             input_data = self.dataframe_to_numpy(data, use_transformed=False)
-            X = input_data['X']
-            Y = input_data['Y']
+            X = input_data["X"]
+            Y = input_data["Y"]
 
-            if 'C' in input_data:
-                C = input_data['C']
+            if "C" in input_data:
+                C = input_data["C"]
                 try:
-                    results = self.function(self.vocs, X, Y, C=C,
-                                            **self.function_options)
+                    results = self.function(
+                        self.vocs, X, Y, C=C, **self.function_options
+                    )
                 except ValueError:
-                    logger.error('callable function does not support constraints with '
-                                 'keyword `C`')
+                    logger.error(
+                        "callable function does not support constraints with "
+                        "keyword `C`"
+                    )
 
             else:
                 results = self.function(self.vocs, X, Y, **self.function_options)
         else:
-            raise BadFunctionError('callable function input arguments not correct, '
-                                   'must be one of the following forms:'
-                                   '- f(vocs: Dict, **kwargs) -> np.ndarray\n'
-                                   '- f(vocs: Dict, data: pandas.Dataframe, **kwargs) '
-                                   '-> np.ndarray\n'
-                                   '- f(vocs: Dict, X: np.ndarray, Y: np.ndarray, '
-                                   '**kwargs) -> np.ndarray\n'
-                                   'NOTE: typing is NOT enforced')
+            raise BadFunctionError(
+                "callable function input arguments not correct, "
+                "must be one of the following forms:"
+                "- f(vocs: Dict, **kwargs) -> np.ndarray\n"
+                "- f(vocs: Dict, data: pandas.Dataframe, **kwargs) "
+                "-> np.ndarray\n"
+                "- f(vocs: Dict, X: np.ndarray, Y: np.ndarray, "
+                "**kwargs) -> np.ndarray\n"
+                "NOTE: typing is NOT enforced"
+            )
         results = np.atleast_2d(results)
-        if results.shape[-1] != len(self.vocs['variables']):
-            raise BadFunctionError('callable function does not return the correct '
-                                   f'dimensional array, returned {results.shape} but '
-                                   f'needs to match # of variables in vocs')
+        if results.shape[-1] != len(self.vocs["variables"]):
+            raise BadFunctionError(
+                "callable function does not return the correct "
+                f"dimensional array, returned {results.shape} but "
+                f"needs to match # of variables in vocs"
+            )
 
-        return pd.DataFrame(results, columns=self.vocs['variables'])
+        return pd.DataFrame(results, columns=self.vocs["variables"])
 
     def is_terminated(self):
         return self.n_calls >= self.max_calls

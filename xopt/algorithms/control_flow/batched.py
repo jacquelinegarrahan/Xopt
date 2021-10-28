@@ -16,7 +16,7 @@ def run_batched(algorithm):
     rs = RandomSample(algorithm.vocs, algorithm.n_initial_samples)
 
     # generate a set of samples that has at least one valid sample
-    logger.info('Generating and submitting initial samples')
+    logger.info("Generating and submitting initial samples")
     results = None
     while True and algorithm.n_initial_samples:
         samples = rs.generate(algorithm.data)
@@ -25,7 +25,7 @@ def run_batched(algorithm):
         if vaild_flag:
             break
         else:
-            logger.warning('random sampling did not return any valid data')
+            logger.warning("random sampling did not return any valid data")
 
     if algorithm.n_initial_samples:
         results = algorithm.generator.transform_data(results)
@@ -39,22 +39,24 @@ def run_batched(algorithm):
 
     # do optimization loop
     while not algorithm.generator.is_terminated():
-        logger.info('generating samples')
+        logger.info("generating samples")
         t0 = time.time()
 
         samples = algorithm.generator.generate(algorithm.data)
-        logger.debug(f'generated {len(samples)} samples in {time.time() - t0:.4} '
-                     f'seconds')
-        logger.debug(f'samples\n{samples}')
+        logger.debug(
+            f"generated {len(samples)} samples in {time.time() - t0:.4} " f"seconds"
+        )
+        logger.debug(f"samples\n{samples}")
         algorithm.evaluator.submit_samples(samples)
 
         # gather results when all done
-        logger.info('collecting results')
+        logger.info("collecting results")
         results, valid = algorithm.evaluator.collect_results()
 
         if not valid:
-            logger.warning('No valid results from measurements, see save file for '
-                           'details')
+            logger.warning(
+                "No valid results from measurements, see save file for " "details"
+            )
         # concatenate results
         algorithm.data = pd.concat([algorithm.data, results], ignore_index=True)
 

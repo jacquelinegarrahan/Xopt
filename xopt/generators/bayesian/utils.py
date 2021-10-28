@@ -33,4 +33,3 @@ algorithm_defaults = {
     "use_gpu": False,
     "eval_args": None,
 }
-

@@ -8,12 +8,11 @@ import pandas as pd
 
 from ..utils import check_dataframe, BadDataError
 from . import DummyExecutor
+
 logger = logging.getLogger(__name__)
 
 
-def sampler_evaluate(inputs: Dict,
-                     evaluate_f: Callable,
-                     **eval_args):
+def sampler_evaluate(inputs: Dict, evaluate_f: Callable, **eval_args):
     """
     Wrapper to catch any exceptions
 
@@ -35,7 +34,7 @@ def sampler_evaluate(inputs: Dict,
         logger.error(f"Exception caught in {__name__}")
         outputs = {
             "Exception": str(ex),
-            #"Traceback": traceback.format_exc(ex),
+            # "Traceback": traceback.format_exc(ex),
         }
 
     finally:
@@ -45,12 +44,13 @@ def sampler_evaluate(inputs: Dict,
 
 
 class Evaluator:
-    def __init__(self,
-                 vocs: Dict,
-                 f: Callable,
-                 executor: Executor = None,
-                 evaluate_options: Dict = None
-                 ):
+    def __init__(
+        self,
+        vocs: Dict,
+        f: Callable,
+        executor: Executor = None,
+        evaluate_options: Dict = None,
+    ):
         self.f = f
         self.vocs = vocs
         self.evaluate_options = evaluate_options or {}
@@ -67,8 +67,8 @@ class Evaluator:
             Samples to be evaluated, should be 2D and the last axis should have the
             same length of len(vocs['variables'])
         """
-        #assert len(samples.shape) == 2
-        assert samples.shape[-1] == len(self.vocs['variables'])
+        # assert len(samples.shape) == 2
+        assert samples.shape[-1] == len(self.vocs["variables"])
 
         settings = []
         if isinstance(samples, pd.Series):
@@ -79,8 +79,8 @@ class Evaluator:
 
         for ele in settings:
             setting = ele.copy()
-            if self.vocs['constants']:
-                setting.update(self.vocs['constants'])
+            if self.vocs["constants"]:
+                setting.update(self.vocs["constants"])
 
             self.futures.update(
                 {
@@ -96,8 +96,7 @@ class Evaluator:
         )
         return done, not_done
 
-    def collect_results(self,
-                        return_when=concurrent.futures.ALL_COMPLETED):
+    def collect_results(self, return_when=concurrent.futures.ALL_COMPLETED):
         """
         Get all of the results from the futures
         """
@@ -108,15 +107,16 @@ class Evaluator:
         results = []
         for future in done:
             r = future.result()
-            if 'Exception' in r:
-                r.update({'status': 'error'})
+            if "Exception" in r:
+                r.update({"status": "error"})
                 # fill in objective/constraint columns with nans
-                keys = list(self.vocs['constraints'] or {}) + \
-                       list(self.vocs['objectives'])
-                r.update({key:np.NAN for key in keys})
+                keys = list(self.vocs["constraints"] or {}) + list(
+                    self.vocs["objectives"]
+                )
+                r.update({key: np.NAN for key in keys})
 
             else:
-                r.update({'status': 'done'})
+                r.update({"status": "done"})
             results += [r]
 
         for ele in done:
@@ -138,6 +138,3 @@ class Evaluator:
 
         else:
             return None, None
-
-
-
