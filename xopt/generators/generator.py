@@ -76,14 +76,17 @@ class Generator(ABC):
         check_dataframe(data, self.vocs)
         return transform_data(data, self.vocs)
 
-    def dataframe_to_numpy(self, data: pd.DataFrame, use_transformed=True) -> Dict:
+    def dataframe_to_numpy(self, data: pd.DataFrame,
+                           use_transformed=True,
+                           keys=None) -> Dict:
 
         check_dataframe(data, self.vocs)
         output = {}
-        keys = {'X': self.vocs['variables'],
-                'Y': self.vocs['objectives'],
-                'C': self.vocs.get('constraints', None),
-                }
+        if keys is None:
+            keys = {'X': self.vocs['variables'],
+                    'Y': self.vocs['objectives'],
+                    'C': self.vocs.get('constraints', None),
+                    }
 
         for key, value in keys.items():
             if value is not None:

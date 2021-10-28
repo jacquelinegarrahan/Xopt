@@ -12,9 +12,9 @@ class TestQualityAware:
           n_steps: 1
           target_observation: y1
           quality_observation: q1
-          nominal_quality_parameters:
-            x3: 0.5
-            x4: 0.5
+          nominal_quality_parameters: 
+            x3
+            x4
 
     evaluate:
       name: test_TNK
@@ -42,4 +42,3 @@ class TestQualityAware:
         # test generalized bayesian optimization from external acquisition function
         X = Xopt(self.config)
         results = X.run()
-        print(results.describe())

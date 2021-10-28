@@ -91,6 +91,7 @@ class Xopt:
     # Configures
     def configure_algorithm(self):
         """ configure generator and algorithm """
+        # parse config dict
         algorithm_config, algorithm_kwargs, \
             generator_config, generator_kwargs = \
             parse_algorithm_config(self.config['algorithm'])
@@ -113,13 +114,15 @@ class Xopt:
             generator,
             **algorithm_kwargs)
 
-        # update config object
+        # update config dict
         self.config['algorithm'] = algorithm_config
 
     def configure_evaluate(self):
+        # parse evaluate dict
         evaluate_function, executor, evaluate_options = parse_evaluator_config(
             self.config['evaluate'])
 
+        # create evaluator object
         self._evaluator = Evaluator(self._vocs,
                                     evaluate_function,
                                     executor,

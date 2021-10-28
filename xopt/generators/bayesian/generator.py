@@ -6,7 +6,7 @@ import pandas as pd
 import torch
 from botorch.acquisition import InverseCostWeightedUtility
 from botorch.acquisition.monte_carlo import qUpperConfidenceBound
-from botorch.models import AffineFidelityCostModel
+from botorch.models import AffineFidelityCostModel, ModelListGP
 from botorch.optim import optimize_acqf
 from botorch.optim.initializers import gen_one_shot_kg_initial_conditions
 from botorch.sampling import SobolQMCNormalSampler
@@ -14,7 +14,7 @@ from botorch.sampling import SobolQMCNormalSampler
 from .acquisition.exploration import create_bayes_exp_acq
 from .acquisition.mobo import get_corrected_ref, create_mobo_acqf
 from .acquisition.multi_fidelity import get_mfkg, get_recommendation
-from .acquisition.quality_aware_exploration import QualityAwareExploration
+from .acquisition.quality_aware_exploration import QualityAwareExploration, split_keys
 from .base import BayesianGenerator
 from .models.models import create_multi_fidelity_model
 from ..utils import transform_data, untransform_x
@@ -52,25 +52,67 @@ class QualityAware(BayesianGenerator):
                  **kwargs):
         optimize_options = kwargs
         self.n_steps = n_steps
+        self.target_observation = target_observation
+        self.quality_observation = quality_observation
+        self.nominal_quality_parameters = nominal_quality_parameters
 
-        # replace nominal_quality_parameters with indicies
-        variable_list = list(vocs['variables'].keys())
-        nom_qual_param = {variable_list.index(name): val for name, val in
-                          nominal_quality_parameters.items()}
+        target_x_keys, _ = split_keys(vocs, nominal_quality_parameters)
 
-        objective_list = list(vocs['objectives'].keys())
+        target_parameter_indicies = [list(vocs['variables']).index(ele) for ele in
+                                     target_x_keys]
         acquisition_function_options = \
             {'beta': beta,
-             'target_idx': objective_list.index(target_observation),
-             'quality_idx': objective_list.index(quality_observation),
-             'nominal_quality_parameters': nom_qual_param}
+             'target_parameter_indicies': target_parameter_indicies, }
 
         super(QualityAware, self).__init__(vocs,
                                            QualityAwareExploration,
                                            acquisition_function_options,
                                            optimize_options,
                                            n_steps=n_steps)
-        self.acquisition_function_options['tkwargs'] = self.tkwargs
+
+    def transform_data(self, data: pd.DataFrame) -> pd.DataFrame:
+        """
+        overwrite how training data is transformed for quality aware optimizaiton,
+        we want to normalize quality data with respect to the range of [0,1]
+        """
+        check_dataframe(data, self.vocs)
+        new_df = transform_data(data, self.vocs)
+
+        # overwrite objective transformations to normalize w.r.t. ref point
+        for key in new_df.keys():
+            if key == self.quality_observation:
+                scale = -1.0 if self.vocs['objectives'][key] == 'MINIMIZE' else 1.0
+                new_df[key + '_t'] = \
+                    scale * (new_df[key] - new_df[key].min()) / (new_df[key].max() -
+                                                                 new_df[key].min())
+
+        return new_df
+
+    def create_model(self, data, use_transformed=True):
+        valid_df = data.loc[data['status'] == 'done']
+
+        # check to make sure there is some data
+        if len(valid_df) == 0:
+            raise RuntimeError('no data to create GP model')
+
+        # split data into sets for training independent GP's, one for quality and one
+        # for target
+        target_x_keys, quality_x_keys = split_keys(self.vocs,
+                                                   self.nominal_quality_parameters)
+
+        #create models
+        models = []
+        for keys, obs in zip([target_x_keys, quality_x_keys],
+                             [self.target_observation, self.quality_observation]):
+
+            data_keys = {'X': keys, 'Y': [obs]}
+
+            # get data to train models
+            train_data = self.dataframe_to_torch(data, use_transformed, data_keys)
+            models += [self.create_model_f(train_data, self.vocs)]
+
+        # combine models into model list object
+        return ModelListGP(*models)
 
 
 class ExpectedHypervolumeImprovement(BayesianGenerator):

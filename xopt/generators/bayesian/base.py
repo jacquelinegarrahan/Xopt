@@ -84,6 +84,14 @@ class BayesianGenerator(ContinuousGenerator):
             )
         return acq_func
 
+    def dataframe_to_torch(self, data: pd.DataFrame,
+                           use_transformed=True,
+                           keys=None) -> Dict:
+        data = self.dataframe_to_numpy(data, use_transformed, keys)
+        for name, val in data.items():
+            data[name] = torch.tensor(data[name], **self.tkwargs)
+        return data
+
     def _generate(self, data) -> pd.DataFrame:
         """
         Generate datapoints for sampling using an acquisition function and a model
@@ -113,16 +121,12 @@ class BayesianGenerator(ContinuousGenerator):
             raise RuntimeError('no data to create GP model')
 
         if use_transformed:
-            train_data = self.dataframe_to_numpy(valid_df)
-            for name, val in train_data.items():
-                train_data[name] = torch.tensor(train_data[name], **self.tkwargs)
+            train_data = self.dataframe_to_torch(valid_df)
 
             # negate objective values -> bototrch assumes maximization
             train_data['Y'] = -train_data['Y']
         else:
-            train_data = self.dataframe_to_numpy(valid_df, False)
-            for name, val in train_data.items():
-                train_data[name] = torch.tensor(train_data[name], **self.tkwargs)
+            train_data = self.dataframe_to_torch(valid_df, False)
 
         # create and train model
         return self.create_model_f(train_data, vocs=self.vocs)

@@ -1,13 +1,23 @@
+from typing import List
+
 import botorch
 import torch
-from torch import Tensor
 from botorch.acquisition.analytic import UpperConfidenceBound
-from botorch.acquisition.objective import ScalarizedObjective
-from botorch.acquisition.analytic import PosteriorMean
-from copy import deepcopy
+from botorch.models import ModelListGP
+from botorch.models.model import Model
+from torch import Tensor
 
 
 # define classes that combine acquisition functions
+
+def split_keys(vocs, nominal_quality_parameters):
+    target_x_keys = []
+    quality_x_keys = []
+    for key in vocs['variables']:
+        quality_x_keys += [key]
+        if key not in nominal_quality_parameters:
+            target_x_keys += [key]
+    return target_x_keys, quality_x_keys
 
 
 class PosteriorUncertainty(botorch.acquisition.analytic.AcquisitionFunction):
@@ -20,47 +30,49 @@ class PosteriorUncertainty(botorch.acquisition.analytic.AcquisitionFunction):
 
 
 class QualityAwareExploration(botorch.acquisition.acquisition.AcquisitionFunction):
-    """
-    Acquisition function to do quality aware optimization. Free parameters are
-    divided into two groups, target_parameters and quality_parameters. We assume that
-    our target function depends strongly on target_parameters and weakly on
-    quality_parameters and that the measurement quality can depend strongly on both sets
-    of parameters. As such, we only wish to maximize model uncertainty with respect to
-    target_parameters, fixing quality_parameters at nominal values.
-
-
-    """
-
     def __init__(self,
-                 model,
-                 nominal_quality_parameters,
-                 target_idx=0,
-                 quality_idx=1,
-                 beta=2.0,
-                 tkwargs=None
+                 model: ModelListGP,
+                 target_parameter_indicies: List,
+                 beta: float = 2.0,
                  ):
+        """
+        Acquisition function to do quality aware optimization. Free parameters are
+        divided into two groups, target_parameters and quality_parameters. We assume
+        that our target function depends strongly on target_parameters and weakly on
+        quality_parameters and that the measurement quality can depend strongly on
+        both sets of parameters. As such, we only wish to maximize model uncertainty
+        with respect to target_parameters.
+
+        For best results the quality measurement should be normalized to the range [
+        0,1]. This is not checked.
+
+        Parameters
+        ----------
+        model : botorch.models.ModelListGP
+            Bayesian models that predict two values, the first is the target
+            measurement that should be explored and the second is the quality
+            measurement. The target model should accept an input tensor of shape
+            n x t x len(target_parameter_indicies).
+
+        target_parameter_indicies : List
+            Indicies of input tensor that correspond to target function inputs
+
+        beta : float
+            Beta parameter of Upper Confidence Bound optimization used for quality
+            optimization
+
+        """
+
         super().__init__(model)
-        self.nominal = nominal_quality_parameters
 
-        model_copy = deepcopy(model)
+        # check to make sure that the target function model has correct input dimensions
+        if model.models[0].train_inputs[0].shape[-1] != len(target_parameter_indicies):
+            raise RuntimeError('target model feature dimension does not match the '
+                               'number of target parameters')
 
-        # modify model copy such that the length scale of the target function with
-        # respect to the quality parameters is very long (assumes normalization)
-        model_lengthscales = model_copy.covar_module.base_kernel.lengthscale
-        for ele in nominal_quality_parameters.keys():
-            model_lengthscales[0, target_idx, ele] = 100.0
-        model_copy.covar_module.base_kernel.lengthscale = model_lengthscales
-
-        tkwargs = tkwargs or {}
-        w1 = torch.zeros(model_copy.num_outputs, **tkwargs)
-        w1[target_idx] = 1.0
-        w2 = torch.zeros(model_copy.num_outputs, **tkwargs)
-        w2[quality_idx] = 1.0
-        self.target_acq = PosteriorUncertainty(model_copy,
-                                               objective=ScalarizedObjective(w1))
-
-        self.quality_acq = UpperConfidenceBound(model_copy, beta,
-                                                objective=ScalarizedObjective(w2))
+        self.target_parameter_indicies = target_parameter_indicies
+        self.target_acq = PosteriorUncertainty(model.models[0])
+        self.quality_acq = UpperConfidenceBound(model.models[1], beta)
 
     def forward(self, X: Tensor) -> Tensor:
         # calculate the posterior uncertainty where the quality parameters are at
@@ -71,10 +83,7 @@ class QualityAwareExploration(botorch.acquisition.acquisition.AcquisitionFunctio
         return pos * qual
 
     def get_target_acq(self, X: Tensor) -> Tensor:
-        X_target_eval = X.clone()
-        for idx, value in self.nominal.items():
-            X_target_eval[..., idx] = value
-        pos = self.target_acq.forward(X_target_eval)
+        pos = self.target_acq.forward(X[..., self.target_parameter_indicies])
         return pos
 
     def get_qual_acq(self, X: Tensor) -> Tensor:
