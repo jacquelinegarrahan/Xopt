@@ -1,16 +1,17 @@
-import numpy as np
+import datetime
+import importlib
+import inspect
+import json
+import logging
+import os
 
 # for dummy executor
 
 from datetime import date
 from hashlib import blake2b
+
+import numpy as np
 import yaml
-import json
-import importlib
-import inspect
-import datetime
-import os
-import logging
 
 xopt_logo = """  _   
                 | |  

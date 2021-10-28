@@ -1,7 +1,8 @@
-from ..generators.generator import FunctionalGenerator, BadFunctionError
 import numpy as np
 import pandas as pd
 import pytest
+
+from ..generators.generator import FunctionalGenerator, BadFunctionError
 
 
 class TestGeneratorBase:

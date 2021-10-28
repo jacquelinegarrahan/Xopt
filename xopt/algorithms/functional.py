@@ -1,6 +1,7 @@
 from typing import Dict, Union, Callable
-from ..generators.generator import Generator, ContinuousGenerator
+
 from ..evaluators.evaluator import Evaluator
+from ..generators.generator import Generator, ContinuousGenerator
 from .algorithm import Algorithm
 
 

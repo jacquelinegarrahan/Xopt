@@ -16,10 +16,10 @@ from .utils import check_and_fill_defaults
 
 logger = logging.getLogger(__name__)
 
-from .generators.generator import FunctionalGenerator
-from .generators import KNOWN_GENERATORS
 from .algorithms.algorithm import Algorithm
 from .evaluators.evaluator import Evaluator
+from .generators import KNOWN_GENERATORS
+from .generators.generator import FunctionalGenerator
 
 
 class Xopt:

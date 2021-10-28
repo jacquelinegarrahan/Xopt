@@ -12,19 +12,19 @@ mpirun -n 4 python -m mpi4py.futures -m xopt.mpi.run xopt.yaml
 
 """
 
-from xopt import Xopt, xopt_logo
-
-from mpi4py.futures import MPIPoolExecutor
 from mpi4py import MPI
+from mpi4py.futures import MPIPoolExecutor
+
+from xopt import Xopt, xopt_logo
 
 comm = MPI.COMM_WORLD
 mpi_rank = comm.Get_rank()
 mpi_size = comm.Get_size()
 
 import argparse
+import logging
 import os
 import sys
-import logging
 from pprint import pprint
 
 from xopt.log import set_handler_with_logger

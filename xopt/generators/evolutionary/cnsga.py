@@ -1,6 +1,8 @@
-from ..generator import FunctionalGenerator
 from typing import Dict
+
 import numpy as np
+
+from ..generator import FunctionalGenerator
 
 
 class CNSGA(FunctionalGenerator):

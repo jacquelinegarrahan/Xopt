@@ -1,5 +1,6 @@
-from xopt import Xopt
 import yaml
+
+from xopt import Xopt
 
 
 class TestCNSGA:

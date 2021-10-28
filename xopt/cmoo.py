@@ -1,33 +1,34 @@
-from packaging import version
 import pymoo
+from packaging import version
 
 from . import vocs_tools
 from .evaluators import DummyExecutor
 
 DEPRECATED_PYMOO = True
 if version.parse(pymoo.__version__) >= version.parse("0.5.0"):
+    from pymoo.algorithms.moo.nsga2 import NSGA2
+
     # pymoo reorganized the project with 0.5.0
     # see more here: https://github.com/anyoptimization/pymoo/releases/tag/0.5.0
     # from pymoo.core.problem import ElementwiseProblem as Problem
     from pymoo.core.problem import Problem
-    from pymoo.algorithms.moo.nsga2 import NSGA2
-    from pymoo.operators.sampling.rnd import FloatRandomSampling
     from pymoo.operators.crossover.sbx import SimulatedBinaryCrossover
+    from pymoo.operators.sampling.rnd import FloatRandomSampling
 
     DEPRECATED_PYMOO = False
 else:
+    from pymoo.algorithms.nsga2 import NSGA2
+
     # Backwards compatibility with < 0.5.0
     from pymoo.model.problem import Problem
-    from pymoo.algorithms.nsga2 import NSGA2
-    from pymoo.operators.sampling.random_sampling import FloatRandomSampling
     from pymoo.operators.crossover.simulated_binary_crossover import (
         SimulatedBinaryCrossover,
     )
-
-from pymoo.optimize import minimize
+    from pymoo.operators.sampling.random_sampling import FloatRandomSampling
 
 import autograd.numpy as anp
 import numpy as np
+from pymoo.optimize import minimize
 
 # ------------------------------------------
 # Additions to pymoo

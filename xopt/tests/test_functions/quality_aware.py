@@ -1,8 +1,9 @@
+import logging
+import time
+
 import numpy as np
 import torch
-import time
 from botorch.test_functions.multi_fidelity import AugmentedHartmann
-import logging
 
 logger = logging.getLogger(__name__)
 VOCS = {

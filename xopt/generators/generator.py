@@ -4,10 +4,10 @@ from inspect import signature
 from typing import Callable, Dict
 
 import numpy as np
-
-from .utils import transform_data
-from ..utils import check_dataframe, BadFunctionError, BadDataError
 import pandas as pd
+
+from ..utils import check_dataframe, BadFunctionError, BadDataError
+from .utils import transform_data
 
 logger = logging.getLogger(__name__)
 

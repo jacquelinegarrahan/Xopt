@@ -4,9 +4,9 @@ Tools to create datsets with pandas
 
 """
 
-import pandas as pd
-
 import json
+
+import pandas as pd
 
 KLIST = ["inputs", "outputs", "error"]
 

@@ -1,9 +1,9 @@
 import pandas as pd
-
-from .generator import ContinuousGenerator
-from ..vocs_tools import get_bounds
-from botorch.utils.sampling import draw_sobol_samples
 import torch
+from botorch.utils.sampling import draw_sobol_samples
+
+from ..vocs_tools import get_bounds
+from .generator import ContinuousGenerator
 
 
 class RandomSample(ContinuousGenerator):

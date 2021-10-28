@@ -3,31 +3,28 @@ Continuous NSGA-II, NSGA-III
 
 """
 
-from xopt import creator, vocs_tools, fitness_with_constraints
-
-from xopt import creator, vocs_tools, fitness_with_constraints
-from xopt.tools import full_path, random_settings_arrays, load_config, NpEncoder
-from xopt.evaluators import DummyExecutor
-from xopt import __version__
-from deap import algorithms, base, tools
-
-from tqdm.auto import tqdm
+import json
+import logging
 
 import numpy as np
-import json
+from deap import algorithms, base, tools
+from tqdm.auto import tqdm
 
-import logging
+from xopt import __version__
+from xopt import creator, vocs_tools, fitness_with_constraints
+from xopt import creator, vocs_tools, fitness_with_constraints
+from xopt.evaluators import DummyExecutor
+from xopt.tools import full_path, random_settings_arrays, load_config, NpEncoder
 
 logger = logging.getLogger(__name__)
 
-import warnings
-
-from pprint import pprint
-import time
 import array
-import random
-import traceback
 import os, sys
+import random
+import time
+import traceback
+import warnings
+from pprint import pprint
 
 
 # Check for continuous integration

@@ -1,7 +1,9 @@
-import pandas as pd
 from typing import Dict
-from xopt.vocs_tools import get_bounds
+
 import numpy as np
+import pandas as pd
+
+from xopt.vocs_tools import get_bounds
 
 
 def untransform_x(dataframe: pd.DataFrame, vocs: Dict) -> pd.DataFrame:

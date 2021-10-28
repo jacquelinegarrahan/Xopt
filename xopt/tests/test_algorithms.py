@@ -5,11 +5,11 @@ from copy import deepcopy
 import numpy as np
 import pandas as pd
 
-from .test_functions.TNK import VOCS, evaluate_TNK
+from ..algorithms.algorithm import Algorithm
 from ..evaluators.evaluator import Evaluator
 from ..generators.bayesian.generator import BayesianExploration
 from ..generators.random import RandomSample
-from ..algorithms.algorithm import Algorithm
+from .test_functions.TNK import VOCS, evaluate_TNK
 
 
 class TestAlgorithms:

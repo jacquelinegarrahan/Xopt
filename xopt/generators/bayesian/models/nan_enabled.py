@@ -1,8 +1,8 @@
 import torch
 from botorch import fit_gpytorch_model
 from botorch.models import SingleTaskGP
-from gpytorch.mlls import ExactMarginalLogLikelihood
 from botorch.models.model_list_gp_regression import ModelListGP
+from gpytorch.mlls import ExactMarginalLogLikelihood
 
 
 class ModelCreationError(Exception):

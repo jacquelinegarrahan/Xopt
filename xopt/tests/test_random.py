@@ -1,5 +1,5 @@
-from .test_functions.TNK import VOCS
 from ..generators.random import RandomSample
+from .test_functions.TNK import VOCS
 
 
 class TestRandom:

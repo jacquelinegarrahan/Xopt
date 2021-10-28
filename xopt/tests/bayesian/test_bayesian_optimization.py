@@ -1,6 +1,6 @@
-from xopt import Xopt
-
 from botorch.acquisition.analytic import UpperConfidenceBound
+
+from xopt import Xopt
 
 
 class TestBayesianOptimization:

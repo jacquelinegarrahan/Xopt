@@ -1,9 +1,9 @@
 import copy
 
+import pytest
 import torch
 
 from xopt import Xopt
-import pytest
 from xopt.tests.test_functions import TNK
 
 

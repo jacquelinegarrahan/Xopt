@@ -3,17 +3,14 @@
 # Adapted from DEAP's NSGA-II example
 
 
-import h5py
 import array
+import os
+import pickle  # for checkpointing. Json doesn't work on the array object
 import random
+import sys
 import time
 
-
-import pickle  # for checkpointing. Json doesn't work on the array object
-
-import os
-import sys
-
+import h5py
 import numpy as np
 
 # from scoop import ### logger
@@ -21,9 +18,10 @@ import numpy as np
 from deap import algorithms
 from deap import base
 from deap import benchmarks
-from deap.benchmarks.tools import diversity, convergence
 from deap import creator
 from deap import tools
+from deap.benchmarks.tools import diversity, convergence
+
 from xopt import fitness_with_constraints
 
 

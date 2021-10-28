@@ -1,7 +1,8 @@
-import numpy as np
 import json
 from math import isnan
 from typing import Dict, Optional, Callable
+
+import numpy as np
 
 
 # --------------------------------

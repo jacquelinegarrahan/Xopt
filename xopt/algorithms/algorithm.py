@@ -1,16 +1,15 @@
+import json
+import logging
+import os
 from abc import ABC, abstractmethod
+from copy import deepcopy
+from typing import Dict, Union
 
 import pandas as pd
 
-from ..generators.generator import Generator, ContinuousGenerator
 from ..evaluators.evaluator import Evaluator
+from ..generators.generator import Generator, ContinuousGenerator
 from .control_flow import KNOWN_CONTROL_FLOW
-from typing import Dict, Union
-from copy import deepcopy
-import os
-import json
-
-import logging
 
 logger = logging.getLogger(__name__)
 

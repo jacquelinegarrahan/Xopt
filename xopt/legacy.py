@@ -1,7 +1,7 @@
-from typing import Dict
-from copy import deepcopy
 import logging
 import warnings
+from copy import deepcopy
+from typing import Dict
 
 logger = logging.getLogger(__name__)
 

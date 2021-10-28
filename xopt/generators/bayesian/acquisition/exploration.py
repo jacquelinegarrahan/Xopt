@@ -1,3 +1,6 @@
+from functools import partial
+from typing import Dict
+
 import torch
 from botorch.acquisition import (
     MCAcquisitionFunction,
@@ -5,15 +8,14 @@ from botorch.acquisition import (
     GenericMCObjective,
 )
 from botorch.acquisition.analytic import _construct_dist
+from botorch.models.gpytorch import GPyTorchModel, ModelListGPyTorchModel
 from botorch.utils.objective import apply_constraints_nonnegative_soft
 from botorch.utils.transforms import (
     concatenate_pending_points,
     t_batch_mode_transform,
     convert_to_target_pre_hook,
 )
-from botorch.models.gpytorch import GPyTorchModel, ModelListGPyTorchModel
-from functools import partial
-from typing import Dict
+
 from ..acquisition.proximal import ProximalAcquisitionFunction
 
 

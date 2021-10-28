@@ -1,6 +1,7 @@
-import pandas as pd
-from typing import Dict
 from copy import deepcopy
+from typing import Dict
+
+import pandas as pd
 
 
 class BadDataError(ValueError):

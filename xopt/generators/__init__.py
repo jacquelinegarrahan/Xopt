@@ -1,4 +1,4 @@
-from .random import RandomSample
+from .bayesian.base import BayesianGenerator
 from .bayesian.generator import (
     UpperConfidenceBound,
     ExpectedHypervolumeImprovement,
@@ -6,7 +6,7 @@ from .bayesian.generator import (
     MultiFidelity,
     QualityAware,
 )
-from .bayesian.base import BayesianGenerator
+from .random import RandomSample
 
 KNOWN_GENERATORS = {
     "random_sample": RandomSample,

@@ -1,7 +1,8 @@
 from copy import deepcopy
 
-from ..xopt import Xopt
 import pytest
+
+from ..xopt import Xopt
 
 
 class TestXoptConfig:

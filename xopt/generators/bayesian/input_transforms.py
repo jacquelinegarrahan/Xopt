@@ -1,9 +1,10 @@
 from __future__ import annotations
+
 from typing import Optional
 
 import torch
-from torch import Tensor
 from botorch.models.transforms.input import Normalize
+from torch import Tensor
 
 
 class CostAwareNormalize(Normalize):

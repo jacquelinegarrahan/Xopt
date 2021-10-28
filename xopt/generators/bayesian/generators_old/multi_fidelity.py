@@ -1,15 +1,15 @@
-import logging
 import copy
+import logging
 
 import torch
-from botorch.models.cost import AffineFidelityCostModel
-from botorch.acquisition.cost_aware import InverseCostWeightedUtility
 from botorch.acquisition import PosteriorMean, AcquisitionFunction
-from botorch.acquisition.knowledge_gradient import qMultiFidelityKnowledgeGradient
+from botorch.acquisition.cost_aware import InverseCostWeightedUtility
 from botorch.acquisition.fixed_feature import FixedFeatureAcquisitionFunction
-from botorch.optim.optimize import optimize_acqf
+from botorch.acquisition.knowledge_gradient import qMultiFidelityKnowledgeGradient
 from botorch.acquisition.utils import project_to_target_fidelity
+from botorch.models.cost import AffineFidelityCostModel
 from botorch.optim.initializers import gen_one_shot_kg_initial_conditions
+from botorch.optim.optimize import optimize_acqf
 
 from xopt.vocs_tools import get_bounds
 from .generator import BayesianGenerator

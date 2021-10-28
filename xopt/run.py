@@ -21,20 +21,16 @@ optional arguments:
 
 """
 
-from xopt import Xopt, xopt_logo
-
-import logging
-
-
-from concurrent.futures import ProcessPoolExecutor
-
 import argparse
+import logging
 import os
 import sys
+from concurrent.futures import ProcessPoolExecutor
+from pprint import pprint
 
 from psutil import cpu_count
 
-from pprint import pprint
+from xopt import Xopt, xopt_logo
 
 
 # ARGS = sys.argv[1:]

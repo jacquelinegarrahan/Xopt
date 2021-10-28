@@ -1,5 +1,6 @@
-from xopt import Xopt
 import pytest
+
+from xopt import Xopt
 
 
 class TestLegacy:

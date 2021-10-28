@@ -1,8 +1,8 @@
 import sys
-
 from collections.abc import Sequence
 from copy import deepcopy
 from operator import mul, truediv
+
 from deap import base
 
 

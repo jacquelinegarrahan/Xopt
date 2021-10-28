@@ -1,14 +1,15 @@
-from xopt.tools import full_path, new_date_filename, random_settings, NpEncoder
-from xopt.evaluators import DummyExecutor
-from xopt import __version__
-from deap.base import Toolbox
 import json
-import time
+import logging
 import os, sys
-
+import time
 import traceback
 import warnings
-import logging
+
+from deap.base import Toolbox
+
+from xopt import __version__
+from xopt.evaluators import DummyExecutor
+from xopt.tools import full_path, new_date_filename, random_settings, NpEncoder
 
 logger = logging.getLogger(__name__)
 
